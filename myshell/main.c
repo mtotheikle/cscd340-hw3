@@ -11,13 +11,20 @@
 #include <ctype.h>
 #include <unistd.h>
 #include "declarations.h"
+#include "linkedList.h"
 #define MAX 1000
 
 // tests:
+// ls -la;
+// ls ; 
 // ls -la; which test
 // ls -la; which test;
 // ls -la; which
 
+Node *head = NULL;
+
+// Notes bash syntax for redirecting file descriptors to another does not work, for example: 2>&1
+// Notes: Alias with pipe does not work
 void strip(char * s)
 {
 	int len = strlen(s);
@@ -46,7 +53,8 @@ int makeargs(char *s, char *** argv)
     }
     
     *argv = calloc(count + 1, sizeof(char*));
-	char * token = strtok(s, " ");
+    char *command = strdup(s);
+	char * token = strtok(command, " ");
     i = 0;
     while (token != NULL) {
         (*argv)[i++] = strdup(token);
@@ -59,6 +67,74 @@ int makeargs(char *s, char *** argv)
     return count;
     
 }// end makeArgs
+
+void makeAlias(char *command)
+{
+    int i = 5;
+    char *aliasName = NULL;
+    char *aliasCommand = NULL;
+    
+    int aliasNameBegin = 0, aliasNameEnd = 0;
+    int commandBegin = 0, commandEnd = 0;
+    char commandStartChar;
+    
+    while (i < strlen(command)) {
+        char c = command[i];
+        
+        if (c == ' ') {
+            // Keep going until we find a character
+        } else if (c == '=') {
+            // Next character should be '"'
+            aliasNameEnd = i - 1;
+            
+        } else if (c == '"' || c == '\'') {
+            if (commandBegin == 0) {
+                commandBegin = i+1;
+                commandStartChar = c;
+            } else if (commandStartChar == c) {
+                commandEnd = i - 1;
+            }
+        } else {
+            if (aliasNameBegin == 0) {
+                // This is a character
+                aliasNameBegin = i;
+            }
+        }
+        i++;
+    }
+    
+    if (!aliasNameEnd) {
+        aliasNameEnd = i; // They just provided and alias name
+    }
+    i = 0;
+        
+    aliasName = calloc((aliasNameEnd - aliasNameBegin) + 2, sizeof(char *));
+    strncpy(aliasName, command + aliasNameBegin, (aliasNameEnd - aliasNameBegin) + 1);
+    
+    if (commandBegin == 0) {
+        aliasCommand = NULL;
+    } else {
+        aliasCommand = calloc((commandEnd - commandBegin) + 2, sizeof(char *));
+        strncpy(aliasCommand, command + commandBegin, (commandEnd - commandBegin) + 1);
+    }
+    
+    if (aliasCommand) { // Saving alias
+        Node *alias = createNode(aliasName, aliasCommand);
+        addOrdered(alias);
+    } else { // Describe alias
+        
+    }
+}
+
+void handleAlias(char *command)
+{
+    if (strlen(command) == 5) {
+        // No arguements, display aliases
+        printAliases();
+    } else {
+        makeAlias(command);
+    }
+}
 
 void clean(int argc, char **argv)
 {
@@ -85,6 +161,19 @@ void forkMe(char **left, char **right)
     
     char **args2 = NULL;
     int argsc2 = makeargs(*right, &args2);
+    
+    // If we have alias then we need to use that instead
+    Node *alias1 = findAliasNode(args1[0]);
+    if (alias1 != NULL) {
+        clean(argsc1, args1);
+        argsc1 = makeargs(alias1->aliasCommand, &args1);
+    }
+    
+    Node *alias2 = findAliasNode(args2[0]);
+    if (alias2 != NULL) {
+        clean(argsc2, args2);
+        argsc2 = makeargs(alias2->aliasCommand, &args2);
+    }
     
     if (fork() != 0)
     {
@@ -141,30 +230,65 @@ void runCommand(char * command)
     char **args = NULL;
     int argsc = makeargs(command, &args);
     
-    if (fork() != 0)
+    if (argsc > 0)
     {
-        int status;
-        waitpid(-1, &status, 0);
-        
-        clean(argsc, args);
-    }
-    else {
-        execvp(args[0], args);
-        
-        printf("Invalid command %s\n", command);
-        
-        // Something failed, bail
-        exit(0);
+        if (strcmp(args[0], "alias") == 0) {
+            handleAlias(command);
+        } else {
+            
+            // If we have alias then we need to use that instead
+            Node *alias = findAliasNode(args[0]);
+            if (alias != NULL) {
+                clean(argsc, args);
+                argsc = makeargs(alias->aliasCommand, &args);
+            }
+            
+            if (fork() != 0)
+            {
+                int status;
+                waitpid(-1, &status, 0);
+                
+                clean(argsc, args);
+            }
+            else {
+                
+                execvp(args[0], args);
+                
+                printf("Invalid command %s\n", command);
+                
+                // Something failed, bail
+                exit(0);
+            }
+        }
     }
 }
 
-void runJobs(Job * job)
+int runJobs(Job * job)
 {
     while (job != NULL) {
-        runCommand(job->command);
+        
+        if (goAgain(job->command) == 0) {
+            return 0;
+        }
+        
+        if (job->isPiped && job->next) {
+            
+            if (strcmp(job->next->command, "") == 0) {
+                printf("invalid syntax");
+                
+                return 1;
+            }
+            
+            forkMe(&job->command, &job->next->command);
+            job = job->next; // Advance to next job as we have already ran the next one
+        } else {
+            runCommand(job->command);
+        }
         
         job = job->next;
     }
+    
+    return 1;
 }
     
 Job * createJob(char *command)
@@ -195,30 +319,54 @@ Job * getJobs()
     char c = getchar();
     Job *job = NULL;
 
-    while (1 == 1) {
+    int inQuote = 0;
+    char quoteChar;
+    
+    while (1) {
         switch (c)
         {
             case ';':
+                
+                if (inQuote) {
+                    buf[i] = c; // Add character to input
+                    i++; // Increment pointer
+                    c = getchar();
+                    
+                    continue;
+                }
                 
                 buf[i] = '\0';
                 if (job == NULL) {
                     job = createJob(buf);
                 } else {
                     job->next = createJob(buf);
+                    job->next->prev = job;
                     job = job->next;
                 }
                 
-                buf[i] = '\0';
-                for (j = i; j > 0; j--) {
+                for (j = i; j >= 0; j--) {
                     buf[j] = '\0';
                 }                
                 i = 0;
             break;
                 
             case '>':
+                
+                if (inQuote) {
+                    buf[i] = c; // Add character to input
+                    i++; // Increment pointer
+                    c = getchar();
+                    
+                    continue;
+                }
+                
                 if (job == NULL) {
                     buf[i] = '\0';
                     job = createJob(buf);
+                } else {
+                    job->next = createJob(buf);
+                    job->next->prev = job;
+                    job = job->next;
                 }
                 
                 // This is just redirection and could build
@@ -229,6 +377,14 @@ Job * getJobs()
                 
                 break;
             case '<':
+                
+                if (inQuote) {
+                    buf[i] = c; // Add character to input
+                    i++; // Increment pointer
+                    c = getchar();
+                    
+                    continue;
+                }
                 
                 if (job == NULL) {
                     buf[i] = '\0';
@@ -242,19 +398,23 @@ Job * getJobs()
                 }
                 
                 break;
-            
-            case '=':
-                // Alias command
-                
-                break;
                 
             case '|': // Our favorie, piping!
+                
+                if (inQuote) {
+                    buf[i] = c; // Add character to input
+                    i++; // Increment pointer
+                    c = getchar();
+                    
+                    continue;
+                }
                 
                 if (job == NULL) {
                     buf[i] = '\0';
                     job = createJob(buf);
                 } else {
                     job->next = createJob(buf);
+                    job->next->prev = job;
                     job = job->next;
                 }
                 
@@ -272,23 +432,62 @@ Job * getJobs()
             break;
                 
             case '\n':
-                if (job == NULL) {
-                    buf[i] = '\0';
-                    job = createJob(buf);
-                } else {
-                    job->next = createJob(buf);
-                    job->next->prev = job;
-                    job = job->next;
+                if (buf[0] != '\0') { // Ensure we don't have an empty buffer
+                    if (job == NULL) {
+                        buf[i] = '\0';
+                        job = createJob(buf);
+                    } else {
+                        job->next = createJob(buf);
+                        job->next->prev = job;
+                        job = job->next;
+                    }
+                    
+                    
+                    buf[i] = '\0'; // Add null terminator to buf        
+                    
+                    // Get the job pointer to the very first job
+                    while (job->prev != NULL) {
+                        job = job->prev;
+                    }
                 }
                 
-                buf[i] = '\0'; // Add null terminator to buf        
-                
-                // Get the job pointer to the very first job
-                while (job->prev != NULL) {
-                    job = job->prev;
-                }
+                for (j = i; j >= 0; j--) {
+                    buf[j] = '\0';
+                }                
+                i = 0;
                 
                 return job;
+            break;
+                
+            case ' ':
+                if (i != 0) {
+                    buf[i] = c; // Add character to input
+                    i++; // Increment pointer
+                }
+            break;
+                
+            case '"':
+                if (inQuote && quoteChar == c) {
+                    inQuote = 0;
+                } else {
+                    inQuote = 1;
+                }
+                
+                quoteChar = c;
+                buf[i] = c; // Add character to input
+                i++; // Increment pointer
+            break;
+                
+            case '\'':
+                if (inQuote && quoteChar == c) {
+                    inQuote = 0;
+                } else {
+                    inQuote = 1;
+                }
+                
+                quoteChar = c;
+                buf[i] = c; // Add character to input
+                i++; // Increment pointer                
             break;
                 
             default:
@@ -305,15 +504,15 @@ int main(int argc, const char * argv[])
 {
     system("clear");
     
-    Job * job = NULL;
-    job = getJobs();
-    
-    while (1 == 1) {
-        runJobs(job);
-        
+    Job * job = NULL;    
+    int run = 1;
+    while (run == 1) {        
         job = getJobs();
+        
+        run = runJobs(job);
     }
     
+    clearAliases();
     
     return 0;
 }

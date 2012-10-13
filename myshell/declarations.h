@@ -4,7 +4,7 @@
 #ifndef tester2_linkedList2_h
 #define tester2_linkedList2_h
 
-struct Job {
+typedef struct Job {
 	char *command;
     
     int isPiped;
@@ -20,11 +20,6 @@ struct Job {
     
 	struct Job *next;
     struct Job *prev;
-};
-
-typedef struct Job Job;
-
-Job *head;
-int size;
+} Job;
 
 #endif
