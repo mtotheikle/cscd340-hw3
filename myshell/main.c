@@ -190,6 +190,7 @@ Job * getJobs()
     printf("?:");
     
     int i = 0;
+    int j;
     char buf[MAX];
     char c = getchar();
     Job *job = NULL;
@@ -208,7 +209,6 @@ Job * getJobs()
                 }
                 
                 buf[i] = '\0';
-                int j;
                 for (j = i; j > 0; j--) {
                     buf[j] = '\0';
                 }                
@@ -262,7 +262,13 @@ Job * getJobs()
                 
                 if (job->prev != NULL) {
                     job->prev->wasPiped = 1;
-                }
+                }                
+                
+                buf[i] = '\0';
+                for (j = i; j > 0; j--) {
+                    buf[j] = '\0';
+                }                
+                i = 0;
             break;
                 
             case '\n':
