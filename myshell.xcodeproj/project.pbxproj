@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		270819901629084F007E44DD /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 2708198F1629084F007E44DD /* main.c */; };
 		270819921629084F007E44DD /* myshell.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 270819911629084F007E44DD /* myshell.1 */; };
+		270819A6162A1393007E44DD /* linkedList.c in Sources */ = {isa = PBXBuildFile; fileRef = 270819A4162A1393007E44DD /* linkedList.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -29,6 +30,8 @@
 		2708198F1629084F007E44DD /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		270819911629084F007E44DD /* myshell.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = myshell.1; sourceTree = "<group>"; };
 		270819A31629242E007E44DD /* declarations.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = declarations.h; sourceTree = "<group>"; };
+		270819A4162A1393007E44DD /* linkedList.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = linkedList.c; sourceTree = "<group>"; };
+		270819A5162A1393007E44DD /* linkedList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = linkedList.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -61,6 +64,8 @@
 		2708198E1629084F007E44DD /* myshell */ = {
 			isa = PBXGroup;
 			children = (
+				270819A4162A1393007E44DD /* linkedList.c */,
+				270819A5162A1393007E44DD /* linkedList.h */,
 				2708198F1629084F007E44DD /* main.c */,
 				270819911629084F007E44DD /* myshell.1 */,
 				270819A31629242E007E44DD /* declarations.h */,
@@ -119,6 +124,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				270819901629084F007E44DD /* main.c in Sources */,
+				270819A6162A1393007E44DD /* linkedList.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
