@@ -10,7 +10,13 @@
 #include <sys/types.h>
 #include <ctype.h>
 #include <unistd.h>
+#include "declarations.h"
 #define MAX 1000
+
+// tests:
+// ls -la; which test
+// ls -la; which test;
+// ls -la; which
 
 void strip(char * s)
 {
@@ -130,21 +136,6 @@ int goAgain(char * s)
     
 }// end goAgain
 
-void getCommand(char * s)
-{    
-    printf("?:");
-    
-    int i = 0;
-    char c = getchar();
-    while (c != '\n') {
-        s[i] = c;
-        i++;
-        c = getchar();
-    }
-    
-    s[i] = '\0';
-}
-
 void runCommand(char * command)
 {
     char **args = NULL;
@@ -167,17 +158,154 @@ void runCommand(char * command)
     }
 }
 
+void runJobs(Job * job)
+{
+    while (job != NULL) {
+        runCommand(job->command);
+        
+        job = job->next;
+    }
+}
+    
+Job * createJob(char *command)
+{
+    Job *job = (Job *) malloc(sizeof(Job));
+    job->isPiped = 0;
+    job->wasPiped = 0;
+    job->redirectOut = 0;
+    job->redirectOutOverwrite = 0;
+    job->alias = 0;
+    
+    job->prev = NULL;
+    job->next = NULL;
+    
+    job->command = malloc(sizeof(char *) * strlen(command));
+    strcpy(job->command, command);
+        
+    return job;
+}
+
+Job * getJobs()
+{    
+    printf("?:");
+    
+    int i = 0;
+    char buf[MAX];
+    char c = getchar();
+    Job *job = NULL;
+
+    while (1 == 1) {
+        switch (c)
+        {
+            case ';':
+                
+                buf[i] = '\0';
+                if (job == NULL) {
+                    job = createJob(buf);
+                } else {
+                    job->next = createJob(buf);
+                    job = job->next;
+                }
+                
+                buf[i] = '\0';
+                int j;
+                for (j = i; j > 0; j--) {
+                    buf[j] = '\0';
+                }                
+                i = 0;
+            break;
+                
+            case '>':
+                if (job == NULL) {
+                    buf[i] = '\0';
+                    job = createJob(buf);
+                }
+                
+                // This is just redirection and could build
+                if (job->redirectOut == 1) {
+                    job->redirectOut = 0;
+                    job->redirectOutOverwrite = 1;
+                }
+                
+                break;
+            case '<':
+                
+                if (job == NULL) {
+                    buf[i] = '\0';
+                    job = createJob(buf);
+                }
+                
+                // Again redirection and can build
+                if (job->redirectIn == 1) {
+                    job->redirectIn = 0;
+                    job->redirectInOverwrite = 1;
+                }
+                
+                break;
+            
+            case '=':
+                // Alias command
+                
+                break;
+                
+            case '|': // Our favorie, piping!
+                
+                if (job == NULL) {
+                    buf[i] = '\0';
+                    job = createJob(buf);
+                } else {
+                    job->next = createJob(buf);
+                    job = job->next;
+                }
+                
+                job->isPiped = 1;
+                
+                if (job->prev != NULL) {
+                    job->prev->wasPiped = 1;
+                }
+            break;
+                
+            case '\n':
+                if (job == NULL) {
+                    buf[i] = '\0';
+                    job = createJob(buf);
+                } else {
+                    job->next = createJob(buf);
+                    job->next->prev = job;
+                    job = job->next;
+                }
+                
+                buf[i] = '\0'; // Add null terminator to buf        
+                
+                // Get the job pointer to the very first job
+                while (job->prev != NULL) {
+                    job = job->prev;
+                }
+                
+                return job;
+            break;
+                
+            default:
+                buf[i] = c; // Add character to input
+                i++; // Increment pointer
+            break;
+        }
+        
+        c = getchar();
+    }
+}
+
 int main(int argc, const char * argv[])
 {
     system("clear");
     
-    char s[MAX];
-    getCommand(s);
+    Job * job = NULL;
+    job = getJobs();
     
-    while (goAgain(s)) {
-        runCommand(s);
+    while (1 == 1) {
+        runJobs(job);
         
-        getCommand(s);
+        job = getJobs();
     }
     
     
