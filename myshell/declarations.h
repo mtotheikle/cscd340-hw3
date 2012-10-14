@@ -1,8 +1,12 @@
+//
+//  declarations.h
+//  Michael Williams
+//  HW 3
+//
 
-
-
-#ifndef tester2_linkedList2_h
-#define tester2_linkedList2_h
+// These are declarations used in the main program, not the linked list piece
+#ifndef declarations_h
+#define declarations_h
 
 typedef struct Job {
 	char *command;

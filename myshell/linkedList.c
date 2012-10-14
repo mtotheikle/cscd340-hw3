@@ -1,5 +1,8 @@
-// Michael Williams 
-// Homework 3
+//
+//  linkedList.c
+//  Michael Williams
+//  HW 3
+//
 
 #include <stdio.h>
 #include <stdlib.h>

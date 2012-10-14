@@ -4,6 +4,15 @@
 //  HW 3
 //
 
+// 
+// Note: Bash syntax for redirecting file descriptors to another does not work, for example: 2>&1
+// Note: Alias with pipes, redirection or multiple commands does not work. Aliases are only supporting
+//       simple 1 command aliases
+// Note: makeargs was not specified to handle quotes, therefore running a command such as grep "test cool" 
+//       will not pass arguements correctly and therefore unexpected behavior with grep will happen
+// Note: Git was used to track this code so others may have found it but it was not made available publicly until
+//       10/14/12 - https://github.com/mtotheikle/cscd340-hw3
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,19 +33,12 @@
 // ls -la; which test
 // ls -la; which test;
 // ls -la; which
-// alias lwc='ls -la | wc -w'
-// lwc
 // grep main < main.c > realout.txt
 
 // ls -la >> test.txt; cat test.txt | less
 
-
 Node *head = NULL;
 
-// Note: Bash syntax for redirecting file descriptors to another does not work, for example: 2>&1
-// Note: Alias with pipe does not work
-// Note: makeargs was not specified to handle quotes, therefore running a command such as grep "test cool" 
-//       will not pass arguements correctly 
 void strip(char * s)
 {
 	int len = strlen(s);
@@ -62,7 +64,7 @@ void clean(int argc, char **argv)
 
 int makeargs(char *s, char *** argv)
 {
-    // http://www.cplusplus.com/reference/clibrary/cstring/strtok/
+    // Reference http://www.cplusplus.com/reference/clibrary/cstring/strtok/
     int length = (int) strlen(s);
     if (length < 1) {
         return -1; // no args

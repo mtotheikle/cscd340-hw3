@@ -1,9 +1,12 @@
-// Michael Williams 
-// Homework 3
+//
+//  linkedList.h
+//  Michael Williams
+//  HW 3
+//
 
 
-#ifndef tester2_linkedList_h
-#define tester2_linkedList_h
+#ifndef linkedList_h
+#define linkedList_h
 
 #include <stdio.h>
 
