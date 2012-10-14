@@ -118,7 +118,6 @@ void printAliases()
     }    
 }
 
-// node number is 1 based
 void printNodeAt(int nodeNumber)
 {
     if (head == NULL) {
@@ -127,7 +126,7 @@ void printNodeAt(int nodeNumber)
     
     int i;
     Node * n = head;
-    for (i = 0; i < nodeNumber - 1; i++) {
+    for (i = 0; i < nodeNumber; i++) {
         n = n->next;
     }
     
