@@ -77,12 +77,15 @@ int makeargs(char *s, char *** argv)
     *argv = malloc((count + 1) * sizeof(char*));
     char *command = strdup(s);
 	char * token = strtok(command, " ");
+
     i = 0;
     while (token != NULL) {
-        (*argv)[i++] = NULL; //strdup(token);
+        (*argv)[i++] = strdup(token);
         token = strtok(NULL, " ");
     }
-    
+
+	free(command);    
+
     // Ensure the last argument has a null
     (*argv)[i] = NULL;
     
@@ -250,11 +253,6 @@ int runJobs(Job * job)
         
         // Parse command
         argsc = makeargs(job->command, &args);
-        
-        clean(argsc, args);
-        i++;
-        job = job->next;    
-        continue;
         
         if (strcmp(args[0], "alias") == 0) {
             handleAlias(job->command);
