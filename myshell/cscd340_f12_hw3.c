@@ -155,6 +155,11 @@ void makeAlias(char *command)
             printNodeAt(index);
         }
     }
+    
+    free(aliasName);
+    if (aliasCommand != NULL) {
+        free(aliasCommand);
+    }
 }
 
 void handleAlias(char *command)
