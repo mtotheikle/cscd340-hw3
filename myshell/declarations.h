@@ -6,7 +6,8 @@
 
 typedef struct Job {
 	char *command;
-    char *inoutFile;
+    char *inFile;
+    char *outFile;
     
     int isPiped;
     int wasPiped;

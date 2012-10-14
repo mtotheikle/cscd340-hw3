@@ -26,6 +26,7 @@
 // ls -la; which
 // alias lwc='ls -la | wc -w'
 // lwc
+// grep main < main.c > realout.txt
 
 // ls -la >> test.txt; cat test.txt | less
 
@@ -45,6 +46,18 @@ void strip(char * s)
 		s[len - 1] = '\0';
 }// end strip
 
+void clean(int argc, char **argv)
+{
+    int i;
+    for (i = 0; i < argc; i++) {
+        free(argv[i]);
+        argv[i] = NULL;
+    }
+    
+    free(argv);
+    argv = NULL;
+}
+
 int makeargs(char *s, char *** argv)
 {
     // http://www.cplusplus.com/reference/clibrary/cstring/strtok/
@@ -61,12 +74,12 @@ int makeargs(char *s, char *** argv)
         }
     }
     
-    *argv = calloc(count + 1, sizeof(char*));
+    *argv = malloc((count + 1) * sizeof(char*));
     char *command = strdup(s);
 	char * token = strtok(command, " ");
     i = 0;
     while (token != NULL) {
-        (*argv)[i++] = strdup(token);
+        (*argv)[i++] = NULL; //strdup(token);
         token = strtok(NULL, " ");
     }
     
@@ -144,17 +157,6 @@ void handleAlias(char *command)
     }
 }
 
-void clean(int argc, char **argv)
-{
-    int i;
-    for (i = 0; i < argc; i++) {
-        free(argv[i]);
-        argv[i] = NULL;
-    }
-    
-    free(argv);
-}
-
 void printargs(int argc, char **argv)
 {
 	int x;
@@ -211,15 +213,18 @@ int runJobs(Job * job)
             reading[j+1] = fileds[0]; // Reading end of pipe
             writing[j] = fileds[1]; // Writing end of pipe
         }
-        else if (tmp->redirectOut) {
+        
+        if (tmp->redirectOut) {
             // This job needs to write data to the output file
-            writing[j] = open(tmp->inoutFile, O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+            writing[j] = open(tmp->outFile, O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
         } else if (tmp->redirectOutAppend) {
             // This job needs to write data to the output file
-            writing[j] = open(tmp->inoutFile, O_WRONLY | O_APPEND | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);            
-        }else if (tmp->redirectIn) {
+            writing[j] = open(tmp->outFile, O_WRONLY | O_APPEND | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);            
+        }
+        
+        if (tmp->redirectIn) {
             // This job needs to read data from the inout file
-            reading[j] = open(tmp->inoutFile, O_RDONLY); 
+            reading[j] = open(tmp->inFile, O_RDONLY); 
         }
         
         tmp = tmp->next; // Get next job
@@ -228,7 +233,7 @@ int runJobs(Job * job)
     int i = 0;
     while (job != NULL) {
     
-        if (goAgain(job->command) == 0) {
+        if (strcmp(job->command, "exit") == 0) {
             for (p = 0; p < numcmds; p++)
             {
                 if (reading[p] != -1) {
@@ -240,22 +245,28 @@ int runJobs(Job * job)
                 }
             }
             
-            clean(argsc, args);
-            
             return -1;
         }
         
         // Parse command
         argsc = makeargs(job->command, &args);
         
+        clean(argsc, args);
+        i++;
+        job = job->next;    
+        continue;
+        
         if (strcmp(args[0], "alias") == 0) {
             handleAlias(job->command);
         
             job = job->next;
             
+            clean(argsc, args);
+            
             continue;
         }
-            
+        
+        
         // See if we can find an alias matching the command
         Node *alias1 = findAliasNode(args[0]);
         if (alias1 != NULL) {
@@ -271,8 +282,7 @@ int runJobs(Job * job)
         {
             if (childpid == 0) 
             {
-                // This is the child process
-                
+                // This is the child process 
 #if DEBUG
                 // TESTING
                 dprintf(newstdin, "Command '%s'\n", job->command);
@@ -329,7 +339,7 @@ int runJobs(Job * job)
     return 1;
 }
     
-Job * createJob(char *command, char *inoutFile, int redirectOut, int redirectOutAppend, int redirectIn)
+Job * createJob(char *command, char *inFile, char *outFile, int redirectOut, int redirectOutAppend, int redirectIn)
 {
     Job *job = (Job *) malloc(sizeof(Job));
     job->isPiped = 0;
@@ -342,14 +352,22 @@ Job * createJob(char *command, char *inoutFile, int redirectOut, int redirectOut
     job->prev = NULL;
     job->next = NULL;
     
+    job->command = NULL;
     if (command != NULL) {
         job->command = malloc(sizeof(char *) * strlen(command));
         strcpy(job->command, command);
     }
     
-    if (inoutFile != NULL) {
-        job->inoutFile = malloc(sizeof(char *) * strlen(inoutFile));
-        strcpy(job->inoutFile, inoutFile);
+    job->inFile = NULL;
+    if (inFile != NULL) {
+        job->inFile = malloc(sizeof(char *) * strlen(inFile));
+        strcpy(job->inFile, inFile);
+    }
+    
+    job->outFile = NULL;
+    if (outFile != NULL) {
+        job->outFile = malloc(sizeof(char *) * strlen(outFile));
+        strcpy(job->outFile, outFile);
     }
     
     return job;
@@ -362,13 +380,20 @@ void cleanJobs(Job * job)
         free(job->command);
         job->command = NULL;
         
-        free(job->inoutFile);
-        job->inoutFile = NULL;    
+        if (job->inFile != NULL) {
+            free(job->inFile);
+            job->inFile = NULL;    
+        }
+        
+        if (job->outFile != NULL) {
+            free(job->outFile);
+            job->outFile = NULL;    
+        }
         
         tmp = job;
         job = job->next;
         
-        free(tmp->prev);
+        tmp->prev = NULL;        
         free(tmp);
         tmp = NULL;
     }
@@ -387,9 +412,11 @@ Job * getJobs()
 {    
     printf("?:");
     
+    int j;
     int i = 0;
     char buf[MAX];
-    char filenameBuf[MAX]; // This is the filename for input/output redirection
+    char inFilenameBuf[MAX]; // This is the filename for input redirection
+    char outFilenameBuf[MAX]; // This is the filename for output redirection
     
 
     int inQuote = 0;
@@ -420,9 +447,9 @@ Job * getJobs()
                 
                 buf[i] = '\0';
                 if (job == NULL) {
-                    job = createJob(buf, filenameBuf, redirectOut, redirectOutAppend, redirectIn);
+                    job = createJob(buf, inFilenameBuf, outFilenameBuf, redirectOut, redirectOutAppend, redirectIn);
                 } else {
-                    job->next = createJob(buf, filenameBuf, redirectOut, redirectOutAppend, redirectIn);
+                    job->next = createJob(buf, inFilenameBuf, outFilenameBuf, redirectOut, redirectOutAppend, redirectIn);
                     job->next->prev = job;
                     job = job->next;
                 }
@@ -430,7 +457,8 @@ Job * getJobs()
                 redirectOut = redirectOutAppend = redirectIn = 0;
                 
                 clearBuffer(buf);
-                clearBuffer(filenameBuf);
+                clearBuffer(inFilenameBuf);
+                clearBuffer(outFilenameBuf);
                 i = 0;
             break;
                 
@@ -452,15 +480,15 @@ Job * getJobs()
                     redirectOut = 1;
                 }
                 
-                int j = 0;
-                while (c != '\n' && c != ';' && c != '|') {
+                j = 0;
+                while (c != '\n' && c != ';' && c != '|' && c != '<') {
                     if (c != ' ') {
-                        filenameBuf[j++] = c;
+                        outFilenameBuf[j++] = c;
                     }
                     
                     c = getchar();
                 }
-                filenameBuf[j] = '\0';
+                outFilenameBuf[j] = '\0';
                 
                 goto switchChar;                
             break;
@@ -475,7 +503,20 @@ Job * getJobs()
                     continue;
                 }
                 
-                redirectIn = 1;                
+                redirectIn = 1;
+                    
+                j = 0;
+                c = getchar();
+                while (c != '\n' && c != ';' && c != '|' && c != '>') {
+                    if (c != ' ') {
+                        inFilenameBuf[j++] = c;
+                    }
+                    
+                    c = getchar();
+                }
+                inFilenameBuf[j] = '\0';
+                
+                goto switchChar;               
             break;
                 
             case '|': // Our favorie, piping!
@@ -490,9 +531,9 @@ Job * getJobs()
                 
                 buf[i] = '\0';
                 if (job == NULL) {
-                    job = createJob(buf, filenameBuf, redirectOut, redirectOutAppend, redirectIn);
+                    job = createJob(buf, inFilenameBuf, outFilenameBuf, redirectOut, redirectOutAppend, redirectIn);
                 } else {
-                    job->next = createJob(buf, filenameBuf, redirectOut, redirectOutAppend, redirectIn);
+                    job->next = createJob(buf, inFilenameBuf, outFilenameBuf, redirectOut, redirectOutAppend, redirectIn);
                     job->next->prev = job;
                     job = job->next;
                 }
@@ -505,7 +546,8 @@ Job * getJobs()
                     job->prev->wasPiped = 1;
                 }                
                 
-                clearBuffer(filenameBuf);
+                clearBuffer(inFilenameBuf);
+                clearBuffer(outFilenameBuf);
                 clearBuffer(buf);
                         
                 i = 0;
@@ -515,10 +557,10 @@ Job * getJobs()
                 if (buf[0] != '\0') { // Ensure we don't have an empty buffer
                     if (job == NULL) {
                         buf[i] = '\0';
-                        job = createJob(buf, filenameBuf, redirectOut, redirectOutAppend, redirectIn);
+                        job = createJob(buf, inFilenameBuf, outFilenameBuf, redirectOut, redirectOutAppend, redirectIn);
                     } else {
                         buf[i] = '\0'; // Add null terminator to buf 
-                        job->next = createJob(buf, filenameBuf, redirectOut, redirectOutAppend, redirectIn);
+                        job->next = createJob(buf, inFilenameBuf, outFilenameBuf, redirectOut, redirectOutAppend, redirectIn);
                         job->next->prev = job;
                         job = job->next;
                     }
@@ -532,7 +574,8 @@ Job * getJobs()
                 }
                 
                 clearBuffer(buf);
-                clearBuffer(filenameBuf);
+                clearBuffer(inFilenameBuf);
+                clearBuffer(outFilenameBuf);
                 i = 0;
                 
                 return job;
