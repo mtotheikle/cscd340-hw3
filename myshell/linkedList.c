@@ -21,8 +21,20 @@ Node * createNode(char *aliasName, char *aliasCommand)
     return node;    
 }
 
+void freeNode(Node *node)
+{
+    free(node->aliasName);
+    free(node->aliasCommand);
+    free(node);
+    node = NULL;
+}
+
 void addOrdered(Node * node)
 {
+    if (findAliasNode(node->aliasName)) {
+        deleteAlias(node->aliasName);
+    }
+    
     size++;
     
     if (head == NULL) {
@@ -34,7 +46,7 @@ void addOrdered(Node * node)
             head = node;
             
             return;
-        } 
+        }
         
         Node *cur = head;
         Node *prev;
@@ -53,14 +65,6 @@ void addOrdered(Node * node)
         node->next = cur;
         prev->next = node;
     }
-}
-
-void freeNode(Node *node)
-{
-    free(node->aliasName);
-    free(node->aliasCommand);
-    free(node);
-    node = NULL;
 }
 
 void deleteNodeAt(int i)

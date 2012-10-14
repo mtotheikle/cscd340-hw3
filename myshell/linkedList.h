@@ -27,6 +27,10 @@ void addOrdered(Node * node);
 
 void deleteAlias(char *aliasName);
 
+int findAliasIndex(char * aliasName);
+
+void printNodeAt(int nodeNumber);
+
 void printAliases();
 
 void clearAliases();

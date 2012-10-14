@@ -150,7 +150,8 @@ void makeAlias(char *command)
         Node *alias = createNode(aliasName, aliasCommand);
         addOrdered(alias);
     } else { // Describe alias
-        
+        int index = findAliasIndex(aliasName);
+        printNodeAt(index);
     }
 }
 
