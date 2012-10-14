@@ -419,6 +419,10 @@ void cleanJobs(Job * job)
 
 void clearBuffer(char *buf)
 {
+    if (buf == NULL) {
+        return;
+    }
+    
     int i;
     int len = strlen(buf);
     for (i = 0; i < len; i++) {
