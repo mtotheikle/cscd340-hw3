@@ -15,8 +15,14 @@ Node * createNode(char *aliasName, char *aliasCommand)
 {
     Node * node = (Node *) malloc(sizeof(Node));
     node->next = NULL;
-    node->aliasName = aliasName;
-    node->aliasCommand = aliasCommand;
+    
+    node->aliasName = calloc(strlen(aliasName), sizeof(char *));
+    strcpy(node->aliasName, aliasName);
+    
+    if (aliasCommand != NULL) {
+        node->aliasCommand = calloc(strlen(aliasCommand), sizeof(char *));
+        strcpy(node->aliasCommand, aliasCommand);    
+    }
     
     return node;    
 }
