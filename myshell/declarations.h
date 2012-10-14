@@ -14,8 +14,6 @@ typedef struct Job {
     char *outFile;
     
     int isPiped;
-    int wasPiped;
-    
     int alias;
     
     int redirectOut;

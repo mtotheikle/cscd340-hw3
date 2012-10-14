@@ -362,7 +362,6 @@ Job * createJob(char *command, char *inFile, char *outFile, int redirectOut, int
 {
     Job *job = (Job *) malloc(sizeof(Job));
     job->isPiped = 0;
-    job->wasPiped = 0;
     job->redirectOut = redirectOut;
     job->redirectOutAppend = redirectOutAppend;
     job->redirectIn = redirectIn;
@@ -560,10 +559,6 @@ Job * getJobs()
                 redirectOut = redirectOutAppend = redirectIn = 0;
                 
                 job->isPiped = 1;
-                
-                if (job->prev != NULL) {
-                    job->prev->wasPiped = 1;
-                }                
                 
                 clearBuffer(inFilenameBuf);
                 clearBuffer(outFilenameBuf);
