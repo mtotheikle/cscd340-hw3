@@ -6,6 +6,7 @@
 
 typedef struct Job {
 	char *command;
+    char *inoutFile;
     
     int isPiped;
     int wasPiped;
@@ -13,10 +14,8 @@ typedef struct Job {
     int alias;
     
     int redirectOut;
-    int redirectOutOverwrite;
-    
+    int redirectOutAppend;
     int redirectIn;
-    int redirectInOverwrite;
     
 	struct Job *next;
     struct Job *prev;

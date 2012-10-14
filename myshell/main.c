@@ -8,11 +8,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <ctype.h>
 #include <unistd.h>
 #include "declarations.h"
 #include "linkedList.h"
-#define MAX 1000
+
+#define MAX 80
+#define DEBUG 0
 
 // tests:
 // ls -la;
@@ -20,6 +24,11 @@
 // ls -la; which test
 // ls -la; which test;
 // ls -la; which
+// alias lwc='ls -la | wc -w'
+// lwc
+
+// ls -la >> test.txt; cat test.txt | less
+
 
 Node *head = NULL;
 
@@ -106,7 +115,6 @@ void makeAlias(char *command)
     if (!aliasNameEnd) {
         aliasNameEnd = i; // They just provided and alias name
     }
-    i = 0;
         
     aliasName = calloc((aliasNameEnd - aliasNameBegin) + 2, sizeof(char *));
     strncpy(aliasName, command + aliasNameBegin, (aliasNameEnd - aliasNameBegin) + 1);
@@ -166,42 +174,88 @@ int goAgain(char * s)
 int runJobs(Job * job)
 {
     int numcmds = 0;
-    Job *tmp = job;
-    while (job != NULL) {
-        numcmds++;
-        job = job->next;
-    }
-    job = tmp;
+    Job *tmp = NULL;
     
-//    int newstdin = dup(STDIN_FILENO);
+    tmp = job;
+    while (tmp != NULL) {
+        numcmds++;
+        tmp = tmp->next;
+    }
+    
+#if DEBUG
+    // Keep copy 
+    int newstdin = dup(STDIN_FILENO);
+#endif
     
     int reading[numcmds];
     int writing[numcmds];
+    
     int argsc;
     char **args;
     
     int p;
-    for(p=0; p < numcmds; p++)
+    for (p=0; p < numcmds; p++)
     {
         reading[p] = -1;
         writing[p] = -1;
     }
     
+    // Now we need to figure out how we need to pipe the output of the command
+    tmp = job; // Assign to tmp so we can loop multiple times
+    int fileds[2];
     int j;
-    for(j=0; j < numcmds-1; j++)
+    for (j = 0; j < numcmds; j++)
     {
-        int fileds[2];
-        pipe(fileds);
-        reading[j+1] = fileds[0]; // Reading end of pipe
-        writing[j] = fileds[1]; // Writing end of pipe
+        if (tmp->isPiped && j < numcmds - 1) {
+            pipe(fileds);
+            reading[j+1] = fileds[0]; // Reading end of pipe
+            writing[j] = fileds[1]; // Writing end of pipe
+        }
+        else if (tmp->redirectOut) {
+            // This job needs to write data to the output file
+            writing[j] = open(tmp->inoutFile, O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+        } else if (tmp->redirectOutAppend) {
+            // This job needs to write data to the output file
+            writing[j] = open(tmp->inoutFile, O_WRONLY | O_APPEND | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);            
+        }else if (tmp->redirectIn) {
+            // This job needs to read data from the inout file
+            reading[j] = open(tmp->inoutFile, O_RDONLY); 
+        }
+        
+        tmp = tmp->next; // Get next job
     }
     
     int i = 0;
     while (job != NULL) {
     
+        if (goAgain(job->command) == 0) {
+            for (p = 0; p < numcmds; p++)
+            {
+                if (reading[p] != -1) {
+                    close(reading[p]);
+                }
+                
+                if (writing[p] != -1) {
+                    close(writing[p]);
+                }
+            }
+            
+            clean(argsc, args);
+            
+            return -1;
+        }
+        
         // Parse command
         argsc = makeargs(job->command, &args);
         
+        if (strcmp(args[0], "alias") == 0) {
+            handleAlias(job->command);
+        
+            job = job->next;
+            
+            continue;
+        }
+            
         // See if we can find an alias matching the command
         Node *alias1 = findAliasNode(args[0]);
         if (alias1 != NULL) {
@@ -218,10 +272,13 @@ int runJobs(Job * job)
             if (childpid == 0) 
             {
                 // This is the child process
+                
+#if DEBUG
                 // TESTING
-//                dprintf(newstdin, "Command '%s'\n", job->command);
-//                dprintf(newstdin, "writing[%d] = %d\n", i, writing[i]);
-//                dprintf(newstdin, "reading[%d] = %d\n", i, reading[i]);
+                dprintf(newstdin, "Command '%s'\n", job->command);
+                dprintf(newstdin, "writing[%d] = %d\n", i, writing[i]);
+                dprintf(newstdin, "reading[%d] = %d\n", i, reading[i]);
+#endif
                 
                 if (writing[i] != -1)
                 {
@@ -245,15 +302,22 @@ int runJobs(Job * job)
             {
                 // parent
                 wait(&status);
-                close(writing[i]);
                 
-                if(i > 0) 
+                clean(argsc, args);
+                
+                if (writing[i] != -1) {
+                    close(writing[i]);
+                }
+                
+                if (i > 0) 
                 {
-                    close(reading[i]);
+                    if (reading[i] != -1) {
+                        close(reading[i]);
+                    }
                 }
             }
         }
-        else 
+        else
         {
             perror("fork");
         }
@@ -265,22 +329,58 @@ int runJobs(Job * job)
     return 1;
 }
     
-Job * createJob(char *command)
+Job * createJob(char *command, char *inoutFile, int redirectOut, int redirectOutAppend, int redirectIn)
 {
     Job *job = (Job *) malloc(sizeof(Job));
     job->isPiped = 0;
     job->wasPiped = 0;
-    job->redirectOut = 0;
-    job->redirectOutOverwrite = 0;
+    job->redirectOut = redirectOut;
+    job->redirectOutAppend = redirectOutAppend;
+    job->redirectIn = redirectIn;
     job->alias = 0;
     
     job->prev = NULL;
     job->next = NULL;
     
-    job->command = malloc(sizeof(char *) * strlen(command));
-    strcpy(job->command, command);
-        
+    if (command != NULL) {
+        job->command = malloc(sizeof(char *) * strlen(command));
+        strcpy(job->command, command);
+    }
+    
+    if (inoutFile != NULL) {
+        job->inoutFile = malloc(sizeof(char *) * strlen(inoutFile));
+        strcpy(job->inoutFile, inoutFile);
+    }
+    
     return job;
+}
+
+void cleanJobs(Job * job)
+{
+    Job * tmp;
+    while (job != NULL) {
+        free(job->command);
+        job->command = NULL;
+        
+        free(job->inoutFile);
+        job->inoutFile = NULL;    
+        
+        tmp = job;
+        job = job->next;
+        
+        free(tmp->prev);
+        free(tmp);
+        tmp = NULL;
+    }
+}
+
+void clearBuffer(char *buf)
+{
+    int i;
+    int len = strlen(buf);
+    for (i = 0; i < len; i++) {
+        buf[i] = '\0';
+    }
 }
 
 Job * getJobs()
@@ -288,15 +388,24 @@ Job * getJobs()
     printf("?:");
     
     int i = 0;
-    int j;
     char buf[MAX];
-    char c = getchar();
-    Job *job = NULL;
+    char filenameBuf[MAX]; // This is the filename for input/output redirection
+    
 
     int inQuote = 0;
     char quoteChar;
     
+    int redirectIn = 0;
+    int redirectOut = 0;
+    int redirectOutAppend = 0;
+    
+    Job *job = NULL;
+    char c = getchar();
     while (1) {
+        
+    // Label so we can jump back to this switch statement after internal processing of more characters
+    switchChar:
+        
         switch (c)
         {
             case ';':
@@ -311,16 +420,17 @@ Job * getJobs()
                 
                 buf[i] = '\0';
                 if (job == NULL) {
-                    job = createJob(buf);
+                    job = createJob(buf, filenameBuf, redirectOut, redirectOutAppend, redirectIn);
                 } else {
-                    job->next = createJob(buf);
+                    job->next = createJob(buf, filenameBuf, redirectOut, redirectOutAppend, redirectIn);
                     job->next->prev = job;
                     job = job->next;
                 }
                 
-                for (j = i; j >= 0; j--) {
-                    buf[j] = '\0';
-                }                
+                redirectOut = redirectOutAppend = redirectIn = 0;
+                
+                clearBuffer(buf);
+                clearBuffer(filenameBuf);
                 i = 0;
             break;
                 
@@ -334,44 +444,39 @@ Job * getJobs()
                     continue;
                 }
                 
-                if (job == NULL) {
-                    buf[i] = '\0';
-                    job = createJob(buf);
+                c = getchar(); // Get next character
+                if (c == '>') { // Support >>
+                    c = getchar();
+                    redirectOutAppend = 1;
                 } else {
-                    job->next = createJob(buf);
-                    job->next->prev = job;
-                    job = job->next;
+                    redirectOut = 1;
                 }
                 
-                // This is just redirection and could build
-                if (job->redirectOut == 1) {
-                    job->redirectOut = 0;
-                    job->redirectOutOverwrite = 1;
+                int j = 0;
+                while (c != '\n' && c != ';' && c != '|') {
+                    if (c != ' ') {
+                        filenameBuf[j++] = c;
+                    }
+                    
+                    c = getchar();
                 }
+                filenameBuf[j] = '\0';
                 
-                break;
+                goto switchChar;                
+            break;
+                
             case '<':
                 
                 if (inQuote) {
                     buf[i] = c; // Add character to input
                     i++; // Increment pointer
                     c = getchar();
-                    
+
                     continue;
                 }
                 
-                if (job == NULL) {
-                    buf[i] = '\0';
-                    job = createJob(buf);
-                }
-                
-                // Again redirection and can build
-                if (job->redirectIn == 1) {
-                    job->redirectIn = 0;
-                    job->redirectInOverwrite = 1;
-                }
-                
-                break;
+                redirectIn = 1;                
+            break;
                 
             case '|': // Our favorie, piping!
                 
@@ -383,14 +488,16 @@ Job * getJobs()
                     continue;
                 }
                 
+                buf[i] = '\0';
                 if (job == NULL) {
-                    buf[i] = '\0';
-                    job = createJob(buf);
+                    job = createJob(buf, filenameBuf, redirectOut, redirectOutAppend, redirectIn);
                 } else {
-                    job->next = createJob(buf);
+                    job->next = createJob(buf, filenameBuf, redirectOut, redirectOutAppend, redirectIn);
                     job->next->prev = job;
                     job = job->next;
                 }
+                
+                redirectOut = redirectOutAppend = redirectIn = 0;
                 
                 job->isPiped = 1;
                 
@@ -398,10 +505,9 @@ Job * getJobs()
                     job->prev->wasPiped = 1;
                 }                
                 
-                buf[i] = '\0';
-                for (j = i; j > 0; j--) {
-                    buf[j] = '\0';
-                }                
+                clearBuffer(filenameBuf);
+                clearBuffer(buf);
+                        
                 i = 0;
             break;
                 
@@ -409,13 +515,15 @@ Job * getJobs()
                 if (buf[0] != '\0') { // Ensure we don't have an empty buffer
                     if (job == NULL) {
                         buf[i] = '\0';
-                        job = createJob(buf);
+                        job = createJob(buf, filenameBuf, redirectOut, redirectOutAppend, redirectIn);
                     } else {
                         buf[i] = '\0'; // Add null terminator to buf 
-                        job->next = createJob(buf);
+                        job->next = createJob(buf, filenameBuf, redirectOut, redirectOutAppend, redirectIn);
                         job->next->prev = job;
                         job = job->next;
                     }
+                    
+                    redirectOut = redirectOutAppend = redirectIn = 0;
                     
                     // Get the job pointer to the very first job
                     while (job->prev != NULL) {
@@ -423,33 +531,21 @@ Job * getJobs()
                     }
                 }
                 
-                for (j = i; j >= 0; j--) {
-                    buf[j] = '\0';
-                }                
+                clearBuffer(buf);
+                clearBuffer(filenameBuf);
                 i = 0;
                 
                 return job;
             break;
                 
             case ' ':
-                if (i != 0) {
+                if (i != 0) { // Don't add space to first job
                     buf[i] = c; // Add character to input
                     i++; // Increment pointer
                 }
             break;
                 
-            case '"':
-                if (inQuote && quoteChar == c) {
-                    inQuote = 0;
-                } else {
-                    inQuote = 1;
-                }
-                
-                quoteChar = c;
-                buf[i] = c; // Add character to input
-                i++; // Increment pointer
-            break;
-                
+            case '"': 
             case '\'':
                 if (inQuote && quoteChar == c) {
                     inQuote = 0;
@@ -459,7 +555,7 @@ Job * getJobs()
                 
                 quoteChar = c;
                 buf[i] = c; // Add character to input
-                i++; // Increment pointer                
+                i++; // Increment pointer            
             break;
                 
             default:
@@ -482,6 +578,8 @@ int main(int argc, const char * argv[])
         job = getJobs();
         
         run = runJobs(job);
+        
+        cleanJobs(job);
     }
     
     clearAliases();
