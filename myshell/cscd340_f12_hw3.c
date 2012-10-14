@@ -151,7 +151,9 @@ void makeAlias(char *command)
         addOrdered(alias);
     } else { // Describe alias
         int index = findAliasIndex(aliasName);
-        printNodeAt(index);
+        if (index != -1) {
+            printNodeAt(index);
+        }
     }
 }
 
