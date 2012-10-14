@@ -154,68 +154,6 @@ void printargs(int argc, char **argv)
 		printf("%s\n", argv[x]);
 }
 
-void forkMe(char **left, char **right)
-{
-    char **args1 = NULL;
-    int argsc1 = makeargs(*left, &args1);
-    
-    char **args2 = NULL;
-    int argsc2 = makeargs(*right, &args2);
-    
-    // If we have alias then we need to use that instead
-    Node *alias1 = findAliasNode(args1[0]);
-    if (alias1 != NULL) {
-        clean(argsc1, args1);
-        argsc1 = makeargs(alias1->aliasCommand, &args1);
-    }
-    
-    Node *alias2 = findAliasNode(args2[0]);
-    if (alias2 != NULL) {
-        clean(argsc2, args2);
-        argsc2 = makeargs(alias2->aliasCommand, &args2);
-    }
-    
-    if (fork() != 0)
-    {
-        int status;
-        waitpid(-1, &status, 0);
-        
-        clean(argsc1, args1);
-        clean(argsc2, args2);
-    }
-    else {
-        
-        int fd[2];
-        // If it does not work a -1 will be returned
-        pipe(fd);
-        
-        pid_t pid = fork();
-        if (pid == -1) 
-            return;
-        
-        if (pid != 0)  
-        {  
-            close(fd[0]); //close read from pipe, in parent
-            dup2(fd[1], STDOUT_FILENO); // Replace stdout with the write end of the pipe
-            close(fd[1]); // Don't need another copy of the pipe write end hanging about
-            execvp(args1[0], args1);
-            
-            // Somethign failed, bail
-            exit(0);
-        }
-        else
-        {
-            close(fd[1]); //close write to pipe, in child
-            dup2(fd[0], STDIN_FILENO); // Replace stdin with the read end of the pipe
-            close(fd[0]); // Don't need another copy of the pipe read end hanging about
-            execvp(args2[0], args2);
-            
-            // Something failed, bail
-            exit(0);
-        }
-    }      
-}
-
 int goAgain(char * s)
 {
     if (strcmp(s, "exit") == 0)
@@ -225,66 +163,102 @@ int goAgain(char * s)
     
 }// end goAgain
 
-void runCommand(char * command)
-{
-    char **args = NULL;
-    int argsc = makeargs(command, &args);
-    
-    if (argsc > 0)
-    {
-        if (strcmp(args[0], "alias") == 0) {
-            handleAlias(command);
-        } else {
-            
-            // If we have alias then we need to use that instead
-            Node *alias = findAliasNode(args[0]);
-            if (alias != NULL) {
-                clean(argsc, args);
-                argsc = makeargs(alias->aliasCommand, &args);
-            }
-            
-            if (fork() != 0)
-            {
-                int status;
-                waitpid(-1, &status, 0);
-                
-                clean(argsc, args);
-            }
-            else {
-                
-                execvp(args[0], args);
-                
-                printf("Invalid command %s\n", command);
-                
-                // Something failed, bail
-                exit(0);
-            }
-        }
-    }
-}
-
 int runJobs(Job * job)
 {
+    int numcmds = 0;
+    Job *tmp = job;
     while (job != NULL) {
+        numcmds++;
+        job = job->next;
+    }
+    job = tmp;
+    
+//    int newstdin = dup(STDIN_FILENO);
+    
+    int reading[numcmds];
+    int writing[numcmds];
+    int argsc;
+    char **args;
+    
+    int p;
+    for(p=0; p < numcmds; p++)
+    {
+        reading[p] = -1;
+        writing[p] = -1;
+    }
+    
+    int j;
+    for(j=0; j < numcmds-1; j++)
+    {
+        int fileds[2];
+        pipe(fileds);
+        reading[j+1] = fileds[0]; // Reading end of pipe
+        writing[j] = fileds[1]; // Writing end of pipe
+    }
+    
+    int i = 0;
+    while (job != NULL) {
+    
+        // Parse command
+        argsc = makeargs(job->command, &args);
         
-        if (goAgain(job->command) == 0) {
-            return 0;
+        // See if we can find an alias matching the command
+        Node *alias1 = findAliasNode(args[0]);
+        if (alias1 != NULL) {
+            clean(argsc, args);
+            argsc = makeargs(alias1->aliasCommand, &args);
         }
         
-        if (job->isPiped && job->next) {
-            
-            if (strcmp(job->next->command, "") == 0) {
-                printf("invalid syntax");
+        pid_t childpid;
+        int status;
+        childpid=fork();
+        
+        if (childpid >= 0) 
+        {
+            if (childpid == 0) 
+            {
+                // This is the child process
+                // TESTING
+//                dprintf(newstdin, "Command '%s'\n", job->command);
+//                dprintf(newstdin, "writing[%d] = %d\n", i, writing[i]);
+//                dprintf(newstdin, "reading[%d] = %d\n", i, reading[i]);
                 
-                return 1;
+                if (writing[i] != -1)
+                {
+                    close(STDOUT_FILENO);
+                    dup2(writing[i],STDOUT_FILENO);
+                }
+                
+                if (reading[i] != -1)
+                {
+                    close(0);
+                    dup2(reading[i],0);
+                }
+                
+                if (execvp(args[0], args) == -1) 
+                {
+                    perror("problem with command");
+                    exit(0);
+                }
             }
-            
-            forkMe(&job->command, &job->next->command);
-            job = job->next; // Advance to next job as we have already ran the next one
-        } else {
-            runCommand(job->command);
+            else 
+            {
+                // parent
+                wait(&status);
+                close(writing[i]);
+                
+                if(i > 0) 
+                {
+                    close(reading[i]);
+                }
+            }
+        }
+        else 
+        {
+            perror("fork");
         }
         
+        i++;
         job = job->next;
     }
     
@@ -437,13 +411,11 @@ Job * getJobs()
                         buf[i] = '\0';
                         job = createJob(buf);
                     } else {
+                        buf[i] = '\0'; // Add null terminator to buf 
                         job->next = createJob(buf);
                         job->next->prev = job;
                         job = job->next;
                     }
-                    
-                    
-                    buf[i] = '\0'; // Add null terminator to buf        
                     
                     // Get the job pointer to the very first job
                     while (job->prev != NULL) {
