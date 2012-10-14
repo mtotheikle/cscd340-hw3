@@ -1,7 +1,7 @@
 //
 //  main.c
-//  Created by Michael Williams on 10/12/12.
-//  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
+//  Michael Williams
+//  HW 3
 //
 
 #include <stdio.h>
@@ -33,8 +33,10 @@
 
 Node *head = NULL;
 
-// Notes bash syntax for redirecting file descriptors to another does not work, for example: 2>&1
-// Notes: Alias with pipe does not work
+// Note: Bash syntax for redirecting file descriptors to another does not work, for example: 2>&1
+// Note: Alias with pipe does not work
+// Note: makeargs was not specified to handle quotes, therefore running a command such as grep "test cool" 
+//       will not pass arguements correctly 
 void strip(char * s)
 {
 	int len = strlen(s);
@@ -176,6 +178,7 @@ int goAgain(char * s)
     
 }// end goAgain
 
+// Some code was used and modifed from http://stackoverflow.com/questions/1694706/problem-with-piping-commands-in-c
 int runJobs(Job * job)
 {
     int numcmds = 0;
@@ -257,6 +260,14 @@ int runJobs(Job * job)
         if (strcmp(args[0], "alias") == 0) {
             handleAlias(job->command);
         
+            job = job->next;
+            
+            clean(argsc, args);
+            
+            continue;
+        } else if (strcmp(args[0], "unalias") == 0) {
+            deleteAlias(args[1]);
+            
             job = job->next;
             
             clean(argsc, args);

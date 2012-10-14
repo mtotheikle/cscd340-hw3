@@ -95,8 +95,6 @@ void printNodeValues(Node *n)
 void printAliases()
 {
     if (size == 0) {
-        printf("Empty List\n");
-        
         return;
     }
     
@@ -163,9 +161,7 @@ void deleteAlias(char *aliasName)
     
     int index = findAliasIndex(aliasName);
     
-    if (index == -1) {
-        printf("Could not find alias\n");
-    } else {
+    if (index != -1) {
         deleteNodeAt(index);
     }
 }

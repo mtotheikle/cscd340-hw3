@@ -22,6 +22,8 @@ Node * findAliasNode(char *aliasName);
 
 void addOrdered(Node * node);
 
+void deleteAlias(char *aliasName);
+
 void printAliases();
 
 void clearAliases();
