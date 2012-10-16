@@ -12,6 +12,11 @@
 //       will not pass arguements correctly and therefore unexpected behavior with grep will happen
 // Note: Git was used to track this code so others may have found it but it was not made available publicly until
 //       10/14/12 - https://github.com/mtotheikle/cscd340-hw3
+// Note: There is little input validation so inputing something like alias la='ls -a 
+//       will cause it to break as getchar() is called and will not know there is no more input
+
+// OLD PATH: 
+// /Users/Mike/.rvm/gems/ruby-1.9.3-p0/bin:/Users/Mike/.rvm/gems/ruby-1.9.3-p0@global/bin:/Users/Mike/.rvm/rubies/ruby-1.9.3-p0/bin:/Users/Mike/.rvm/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin:/opt/local/bin:/usr/local/git/bin
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,9 +28,7 @@
 #include <unistd.h>
 #include "declarations.h"
 #include "linkedList.h"
-
-#define MAX 80
-#define DEBUG 0
+#include "utilities.h"
 
 // tests:
 // ls -la;
@@ -38,64 +41,6 @@
 // ls -la >> test.txt; cat test.txt | less
 
 Node *head = NULL;
-
-void strip(char * s)
-{
-	int len = strlen(s);
-    
-	if(s[len - 2] == '\r')
-		s[len - 2] = '\0';
-    
-	else if(s[len - 1] == '\n')
-		s[len - 1] = '\0';
-}// end strip
-
-void clean(int argc, char **argv)
-{
-    int i;
-    for (i = 0; i < argc; i++) {
-        free(argv[i]);
-        argv[i] = NULL;
-    }
-    
-    free(argv);
-    argv = NULL;
-}
-
-int makeargs(char *s, char *** argv)
-{
-    // Reference http://www.cplusplus.com/reference/clibrary/cstring/strtok/
-    int length = (int) strlen(s);
-    if (length < 1) {
-        return -1; // no args
-    }
-    
-    int i;
-    int count = 1; // count starts at 1 as we assume there is always one arguemnt
-    for (i = 0; i < length; i++) {
-        if (s[i] == ' ') {
-            count++;
-        }
-    }
-    
-    *argv = malloc((count + 1) * sizeof(char*));
-    char *command = strdup(s);
-	char * token = strtok(command, " ");
-
-    i = 0;
-    while (token != NULL) {
-        (*argv)[i++] = strdup(token);
-        token = strtok(NULL, " ");
-    }
-
-	free(command);    
-
-    // Ensure the last argument has a null
-    (*argv)[i] = NULL;
-    
-    return count;
-    
-}// end makeArgs
 
 void makeAlias(char *command)
 {
@@ -188,6 +133,25 @@ int goAgain(char * s)
     
 }// end goAgain
 
+int checkBuiltInCommands(Job *job, char **args, int argsc)
+{
+    if (strcmp(args[0], "alias") == 0) {
+        handleAlias(job->command);
+        
+        job = job->next;
+        
+        return 1;
+    } else if (strcmp(args[0], "unalias") == 0) {
+        deleteAlias(args[1]);
+        
+        job = job->next;
+        
+        return 1;
+    }
+    
+    return -1;
+}
+
 // Some code was used and modifed from http://stackoverflow.com/questions/1694706/problem-with-piping-commands-in-c
 int runJobs(Job * job)
 {
@@ -248,7 +212,6 @@ int runJobs(Job * job)
     
     int i = 0;
     while (job != NULL) {
-    
         if (strcmp(job->command, "exit") == 0) {
             for (p = 0; p < numcmds; p++)
             {
@@ -267,24 +230,14 @@ int runJobs(Job * job)
         // Parse command
         argsc = makeargs(job->command, &args);
         
-        if (strcmp(args[0], "alias") == 0) {
-            handleAlias(job->command);
-        
-            job = job->next;
+        if (checkBuiltInCommands(job, args, argsc) == 1) {
             
             clean(argsc, args);
             
-            continue;
-        } else if (strcmp(args[0], "unalias") == 0) {
-            deleteAlias(args[1]);
-            
             job = job->next;
-            
-            clean(argsc, args);
             
             continue;
         }
-        
         
         // See if we can find an alias matching the command
         Node *alias1 = findAliasNode(args[0]);
@@ -417,28 +370,13 @@ void cleanJobs(Job * job)
     }
 }
 
-void clearBuffer(char *buf)
-{
-    if (buf == NULL) {
-        return;
-    }
-    
-    int i;
-    int len = strlen(buf);
-    for (i = 0; i < len; i++) {
-        buf[i] = '\0';
-    }
-}
-
-Job * getJobs()
+Job * getJobs(FILE * inputStream)
 {    
-    printf("?:");
-    
     int j;
     int i = 0;
-    char buf[MAX];
-    char inFilenameBuf[MAX]; // This is the filename for input redirection
-    char outFilenameBuf[MAX]; // This is the filename for output redirection
+    char buf[MAX] = {};
+    char inFilenameBuf[MAX] = {}; // This is the filename for input redirection
+    char outFilenameBuf[MAX] = {}; // This is the filename for output redirection
     
 
     int inQuote = 0;
@@ -449,7 +387,7 @@ Job * getJobs()
     int redirectOutAppend = 0;
     
     Job *job = NULL;
-    char c = getchar();
+    char c = getc(inputStream);
     while (1) {
         
     // Label so we can jump back to this switch statement after internal processing of more characters
@@ -462,7 +400,7 @@ Job * getJobs()
                 if (inQuote) {
                     buf[i] = c; // Add character to input
                     i++; // Increment pointer
-                    c = getchar();
+                    c = getc(inputStream);
                     
                     continue;
                 }
@@ -489,14 +427,14 @@ Job * getJobs()
                 if (inQuote) {
                     buf[i] = c; // Add character to input
                     i++; // Increment pointer
-                    c = getchar();
+                    c = getc(inputStream);
                     
                     continue;
                 }
                 
-                c = getchar(); // Get next character
+                c = getc(inputStream); // Get next character
                 if (c == '>') { // Support >>
-                    c = getchar();
+                    c = getc(inputStream);
                     redirectOutAppend = 1;
                 } else {
                     redirectOut = 1;
@@ -508,7 +446,7 @@ Job * getJobs()
                         outFilenameBuf[j++] = c;
                     }
                     
-                    c = getchar();
+                    c = getc(inputStream);
                 }
                 outFilenameBuf[j] = '\0';
                 
@@ -520,7 +458,7 @@ Job * getJobs()
                 if (inQuote) {
                     buf[i] = c; // Add character to input
                     i++; // Increment pointer
-                    c = getchar();
+                    c = getc(inputStream);
 
                     continue;
                 }
@@ -528,13 +466,13 @@ Job * getJobs()
                 redirectIn = 1;
                     
                 j = 0;
-                c = getchar();
+                c = getc(inputStream);
                 while (c != '\n' && c != ';' && c != '|' && c != '>') {
                     if (c != ' ') {
                         inFilenameBuf[j++] = c;
                     }
                     
-                    c = getchar();
+                    c = getc(inputStream);
                 }
                 inFilenameBuf[j] = '\0';
                 
@@ -546,7 +484,7 @@ Job * getJobs()
                 if (inQuote) {
                     buf[i] = c; // Add character to input
                     i++; // Increment pointer
-                    c = getchar();
+                    c = getc(inputStream);
                     
                     continue;
                 }
@@ -625,22 +563,42 @@ Job * getJobs()
             break;
         }
         
-        c = getchar();
+        c = getc(inputStream);
     }
+}
+
+void loadRc()
+{
+    FILE* fd = fopen("./.mshrc", "r");
+
+    if (fd == NULL) {
+        perror("opening file failed");
+        
+        return;
+    }
+    
+    Job *job = getJobs(fd);
+    
+    runJobs(job);
 }
 
 int main(int argc, const char * argv[])
 {
     system("clear");
     
+    loadRc();
+    
     Job * job = NULL;    
     int run = 1;
-    while (run == 1) {        
-        job = getJobs();
+    while (run == 1) {  
+        
+        printf("?:");
+        job = getJobs(stdin);
         
         run = runJobs(job);
         
         cleanJobs(job);
+        job = NULL;
     }
     
     clearAliases();
