@@ -124,15 +124,6 @@ void printargs(int argc, char **argv)
 		printf("%s\n", argv[x]);
 }
 
-int goAgain(char * s)
-{
-    if (strcmp(s, "exit") == 0)
-        return 0;
-    
-    return 1;
-    
-}// end goAgain
-
 int checkBuiltInCommands(Job *job, char **args, int argsc)
 {
     if (strcmp(args[0], "alias") == 0) {
