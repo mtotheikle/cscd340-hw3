@@ -29,6 +29,7 @@
 #include "declarations.h"
 #include "linkedList.h"
 #include "utilities.h"
+#include "history.h"
 
 // tests:
 // ls -la;
@@ -138,6 +139,8 @@ int checkBuiltInCommands(Job *job, char **args, int argsc)
         job = job->next;
         
         return 1;
+    } else if (strcmp(args[0], "history") == 0) {
+        
     }
     
     return -1;

@@ -14,6 +14,7 @@
 		27730E12162D2ACB008C7449 /* parser.c in Sources */ = {isa = PBXBuildFile; fileRef = 27730E11162D2ACB008C7449 /* parser.c */; };
 		27730E14162D2B93008C7449 /* utilities.c in Sources */ = {isa = PBXBuildFile; fileRef = 27730E13162D2B93008C7449 /* utilities.c */; };
 		27730E18162D35C0008C7449 /* .mshrc in CopyFiles */ = {isa = PBXBuildFile; fileRef = 27730E16162D3588008C7449 /* .mshrc */; };
+		27730E1B162D3C3B008C7449 /* history.c in Sources */ = {isa = PBXBuildFile; fileRef = 27730E1A162D3C3B008C7449 /* history.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -52,6 +53,8 @@
 		27730E13162D2B93008C7449 /* utilities.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = utilities.c; sourceTree = "<group>"; };
 		27730E15162D2B9F008C7449 /* utilities.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = utilities.h; sourceTree = "<group>"; };
 		27730E16162D3588008C7449 /* .mshrc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .mshrc; sourceTree = "<group>"; };
+		27730E19162D3C31008C7449 /* history.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = history.h; sourceTree = "<group>"; };
+		27730E1A162D3C3B008C7449 /* history.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = history.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,6 +98,8 @@
 				27730E11162D2ACB008C7449 /* parser.c */,
 				27730E13162D2B93008C7449 /* utilities.c */,
 				27730E15162D2B9F008C7449 /* utilities.h */,
+				27730E19162D3C31008C7449 /* history.h */,
+				27730E1A162D3C3B008C7449 /* history.c */,
 			);
 			path = myshell;
 			sourceTree = "<group>";
@@ -155,6 +160,7 @@
 				270819B0162B5A0A007E44DD /* makefile in Sources */,
 				27730E12162D2ACB008C7449 /* parser.c in Sources */,
 				27730E14162D2B93008C7449 /* utilities.c in Sources */,
+				27730E1B162D3C3B008C7449 /* history.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
