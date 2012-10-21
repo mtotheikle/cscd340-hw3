@@ -130,6 +130,23 @@ void printargs(int argc, char **argv)
 		printf("%s\n", argv[x]);
 }
 
+// From http://stackoverflow.com/a/6048381
+void addToBuffer(char **content, char *buf) {
+    int textlen, oldtextlen;
+    textlen =  strlen(buf);
+    if (*content == NULL)
+        oldtextlen = 0;
+    else
+        oldtextlen = strlen(*content);
+    *content = (char *) realloc( (void *) *content, (sizeof(char)) * (oldtextlen+textlen+1));
+    if ( oldtextlen != 0 ) {
+        strncpy(*content + oldtextlen, buf, textlen + 1);
+    } else {
+        strncpy(*content, buf, textlen + 1);
+    }
+}
+
+
 int checkBuiltInCommands(Job *job, char **args, int argsc, int addToHistory)
 {
     if (strcmp(args[0], "alias") == 0) {
@@ -191,6 +208,30 @@ int checkBuiltInCommands(Job *job, char **args, int argsc, int addToHistory)
         if (his != NULL) {
             runJobs(his->job, 0);
         }
+        
+        return 1;
+    } else if (strstr(args[0], "PATH=") != NULL) {
+        
+        char *tmp = malloc(sizeof(char *) * strlen(args[0] - 4)); // Enough room for \0
+        strncpy(tmp, args[0] + 5, strlen(args[0]));
+        
+        char *path = NULL;
+        char *token = strtok(tmp, ":");
+        while (token != NULL) {
+            if (strcmp(token, "$PATH") == 0) {
+                // Need to get path and append 
+                addToBuffer(&path, getenv("PATH"));
+            } else {
+                addToBuffer(&path, ":");
+                addToBuffer(&path, token);
+            }
+            
+            token = strtok(NULL, ":");
+        }
+        
+        setenv("PATH", path, 1);
+        free(path);
+        path = NULL; // Don't use path later, invalid memory
         
         return 1;
     }
@@ -426,7 +467,7 @@ void cleanJobs(Job * job)
 }
 
 Job * getJobs(FILE * inputStream)
-{    
+{
     int j;
     int i = 0;
     char buf[MAX] = {};
@@ -508,7 +549,7 @@ Job * getJobs(FILE * inputStream)
                 
                 goto switchChar;                
             break;
-                
+
             case '<':
                 
                 if (inQuote) {
@@ -623,6 +664,232 @@ Job * getJobs(FILE * inputStream)
     }
 }
 
+Job * parseCommand(char *command)
+{
+    int j;
+    int i = 0;
+    int commandIndex = 0;
+    char buf[MAX] = {};
+    char inFilenameBuf[MAX] = {}; // This is the filename for input redirection
+    char outFilenameBuf[MAX] = {}; // This is the filename for output redirection
+    
+    
+    int inQuote = 0;
+    char quoteChar;
+    
+    int redirectIn = 0;
+    int redirectOut = 0;
+    int redirectOutAppend = 0;
+    
+    Job *job = NULL;
+    char c = command[commandIndex];
+    while (commandIndex < strlen(command)) {
+        
+        // Label so we can jump back to this switch statement after internal processing of more characters
+        // this prevents us from having to pull another character off the buffer
+    switchChar:
+        
+        switch (c)
+        {                
+            case ';':
+                
+                if (inQuote) {
+                    buf[i] = c; // Add character to input
+                    i++; // Increment pointer
+                    c = command[++commandIndex];
+                    
+                    continue;
+                }
+                
+                buf[i] = '\0';
+                if (job == NULL) {
+                    job = createJob(buf, inFilenameBuf, outFilenameBuf, redirectOut, redirectOutAppend, redirectIn);
+                } else {
+                    job->next = createJob(buf, inFilenameBuf, outFilenameBuf, redirectOut, redirectOutAppend, redirectIn);
+                    job->next->prev = job;
+                    job = job->next;
+                }
+                
+                redirectOut = redirectOutAppend = redirectIn = 0;
+                
+                clearBuffer(buf);
+                clearBuffer(inFilenameBuf);
+                clearBuffer(outFilenameBuf);
+                i = 0;
+            break;
+                
+            case '>':
+                
+                if (inQuote) {
+                    buf[i] = c; // Add character to input
+                    i++; // Increment pointer
+                    c = command[++commandIndex];
+                    
+                    continue;
+                }
+                
+                c = command[++commandIndex]; // Get next character
+                if (c == '>') { // Support >>
+                    c = command[++commandIndex];
+                    redirectOutAppend = 1;
+                } else {
+                    redirectOut = 1;
+                }
+                
+                j = 0;
+                while (c != '\n' && c != ';' && c != '|' && c != '<') {
+                    if (c != ' ') {
+                        outFilenameBuf[j++] = c;
+                    }
+                    
+                    c = command[++commandIndex];
+                }
+                outFilenameBuf[j] = '\0';
+                
+                goto switchChar;                
+                break;
+                
+            case '<':
+                
+                if (inQuote) {
+                    buf[i] = c; // Add character to input
+                    i++; // Increment pointer
+                    c = command[++commandIndex];
+                    
+                    continue;
+                }
+                
+                redirectIn = 1;
+                
+                j = 0;
+                c = command[++commandIndex];
+                while (c != '\n' && c != ';' && c != '|' && c != '>') {
+                    if (c != ' ') {
+                        inFilenameBuf[j++] = c;
+                    }
+                    
+                    c = command[++commandIndex];
+                }
+                
+                inFilenameBuf[j] = '\0';
+                
+                goto switchChar;               
+                break;
+                
+            case '|': // Our favorie, piping!
+                
+                if (inQuote) {
+                    buf[i] = c; // Add character to input
+                    i++; // Increment pointer
+                    c = command[++commandIndex];
+                    
+                    continue;
+                }
+                
+                buf[i] = '\0';
+                if (job == NULL) {
+                    job = createJob(buf, inFilenameBuf, outFilenameBuf, redirectOut, redirectOutAppend, redirectIn);
+                } else {
+                    job->next = createJob(buf, inFilenameBuf, outFilenameBuf, redirectOut, redirectOutAppend, redirectIn);
+                    job->next->prev = job;
+                    job = job->next;
+                }
+                
+                redirectOut = redirectOutAppend = redirectIn = 0;
+                
+                job->isPiped = 1;
+                
+                clearBuffer(inFilenameBuf);
+                clearBuffer(outFilenameBuf);
+                clearBuffer(buf);
+                
+                i = 0;
+                break;
+                
+            case '\n':
+                if (buf[0] != '\0') { // Ensure we don't have an empty buffer
+                    if (job == NULL) {
+                        buf[i] = '\0';
+                        job = createJob(buf, inFilenameBuf, outFilenameBuf, redirectOut, redirectOutAppend, redirectIn);
+                    } else {
+                        buf[i] = '\0'; // Add null terminator to buf 
+                        job->next = createJob(buf, inFilenameBuf, outFilenameBuf, redirectOut, redirectOutAppend, redirectIn);
+                        job->next->prev = job;
+                        job = job->next;
+                    }
+                    
+                    redirectOut = redirectOutAppend = redirectIn = 0;
+                    
+                    // Get the job pointer to the very first job
+                    while (job->prev != NULL) {
+                        job = job->prev;
+                    }
+                }
+                
+                clearBuffer(buf);
+                clearBuffer(inFilenameBuf);
+                clearBuffer(outFilenameBuf);
+                i = 0;
+                
+                return job;
+                break;
+                
+            case ' ':
+                if (i != 0) { // Don't add space to first job
+                    buf[i] = c; // Add character to input
+                    i++; // Increment pointer
+                }
+                break;
+                
+            case '"': 
+            case '\'':
+                if (inQuote && quoteChar == c) {
+                    inQuote = 0;
+                } else {
+                    inQuote = 1;
+                }
+                
+                quoteChar = c;
+                buf[i] = c; // Add character to input
+                i++; // Increment pointer            
+                break;
+                
+            default:
+                buf[i] = c; // Add character to input
+                i++; // Increment pointer
+                break;
+        }
+        
+        c = command[++commandIndex];
+    }
+    
+    if (buf[0] != '\0') { // Ensure we don't have an empty buffer
+        if (job == NULL) {
+            buf[i] = '\0';
+            job = createJob(buf, inFilenameBuf, outFilenameBuf, redirectOut, redirectOutAppend, redirectIn);
+        } else {
+            buf[i] = '\0'; // Add null terminator to buf 
+            job->next = createJob(buf, inFilenameBuf, outFilenameBuf, redirectOut, redirectOutAppend, redirectIn);
+            job->next->prev = job;
+            job = job->next;
+        }
+        
+        redirectOut = redirectOutAppend = redirectIn = 0;
+        
+        // Get the job pointer to the very first job
+        while (job->prev != NULL) {
+            job = job->prev;
+        }
+    }
+    
+    clearBuffer(buf);
+    clearBuffer(inFilenameBuf);
+    clearBuffer(outFilenameBuf);
+    i = 0;
+    
+    return job;
+}
+
 void readHistory()
 {
     FILE *file = fopen(HISTFILE, "r");
@@ -630,12 +897,11 @@ void readHistory()
     if (file == NULL) {
         return;
     }
-
-    Job *job = getJobs(file);    
-    while (job != NULL) {
+    
+    char buf[MAX] = {};
+    while (fgets(buf, MAX, file) != NULL) {
+        Job *job = parseCommand(buf);
         addHistory(job);
-        
-        job = job->next;
     }
 }
 
@@ -649,10 +915,13 @@ void loadRc()
         return;
     }
     
-    Job *job = getJobs(file);
+    char buf[MAX] = {};
+    while (fgets(buf, MAX, file) != NULL) {        
+        Job *job = parseCommand(buf);
+        runJobs(job, 0);
+        cleanJobs(job);
+    }
     
-    runJobs(job, 0);
-    cleanJobs(job);
     fclose(file);
 }
 

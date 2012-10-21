@@ -29,6 +29,10 @@ HistoryNode * createHistoryNode(Job *job)
 
 void addHistory(Job *job)
 {
+    if (job->command == NULL) {
+        return;
+    }
+    
     historySize++;
     
     HistoryNode *node = createHistoryNode(job);
@@ -48,6 +52,8 @@ void addHistory(Job *job)
 
 void freeHistoryNode(HistoryNode *node)
 {
+    return;
+    
     // @todo Free job
     //freeJob(node->job);
     free(node);
@@ -102,6 +108,7 @@ void printHistory()
 {
     HistoryNode *tmp = historyHead;
     int i = 1;
+    
     while (tmp != NULL) {
         
         printf("\t %d ", i++);
