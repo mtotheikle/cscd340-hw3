@@ -11,6 +11,8 @@
 #define MAX 80
 #define DEBUG 0
 
+#define HISTFILE ".msh_history"
+
 typedef struct Job {
 	char *command;
     char *inFile;

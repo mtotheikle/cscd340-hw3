@@ -9,12 +9,22 @@
 #ifndef myshell_history_h
 #define myshell_history_h
 
+typedef struct HistoryNode {
+	Job *job;
+	struct HistoryNode *next;
+} HistoryNode;
+
+HistoryNode *historyHead;
+int historySize;
+
 void printHistory();
 
-void addHistory();
+void addHistory(Job *job);
 
-void findHistory(int index);
+void readHistory();
 
-char * getHistoryCommand(int index);
+void cleanHistory();
+
+HistoryNode *getHistoryCommand(int index);
 
 #endif

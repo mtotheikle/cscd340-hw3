@@ -15,6 +15,7 @@
 		27730E14162D2B93008C7449 /* utilities.c in Sources */ = {isa = PBXBuildFile; fileRef = 27730E13162D2B93008C7449 /* utilities.c */; };
 		27730E18162D35C0008C7449 /* .mshrc in CopyFiles */ = {isa = PBXBuildFile; fileRef = 27730E16162D3588008C7449 /* .mshrc */; };
 		27730E1B162D3C3B008C7449 /* history.c in Sources */ = {isa = PBXBuildFile; fileRef = 27730E1A162D3C3B008C7449 /* history.c */; };
+		27730E3A16312FCA008C7449 /* .msh_history in CopyFiles */ = {isa = PBXBuildFile; fileRef = 27730E3816312FC6008C7449 /* .msh_history */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -34,6 +35,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 7;
 			files = (
+				27730E3A16312FCA008C7449 /* .msh_history in CopyFiles */,
 				27730E18162D35C0008C7449 /* .mshrc in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -55,6 +57,7 @@
 		27730E16162D3588008C7449 /* .mshrc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .mshrc; sourceTree = "<group>"; };
 		27730E19162D3C31008C7449 /* history.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = history.h; sourceTree = "<group>"; };
 		27730E1A162D3C3B008C7449 /* history.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = history.c; sourceTree = "<group>"; };
+		27730E3816312FC6008C7449 /* .msh_history */ = {isa = PBXFileReference; lastKnownFileType = text; path = .msh_history; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -87,6 +90,7 @@
 		2708198E1629084F007E44DD /* myshell */ = {
 			isa = PBXGroup;
 			children = (
+				27730E3816312FC6008C7449 /* .msh_history */,
 				27730E16162D3588008C7449 /* .mshrc */,
 				270819A4162A1393007E44DD /* linkedList.c */,
 				270819A5162A1393007E44DD /* linkedList.h */,

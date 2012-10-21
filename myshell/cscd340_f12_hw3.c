@@ -31,6 +31,8 @@
 #include "utilities.h"
 #include "history.h"
 
+#include <signal.h>
+
 // tests:
 // ls -la;
 // ls ; 
@@ -42,6 +44,9 @@
 // ls -la >> test.txt; cat test.txt | less
 
 Node *head = NULL;
+HistoryNode *historyHead = NULL;
+
+int runJobs(Job * job, int addToHistory);
 
 void makeAlias(char *command)
 {
@@ -125,29 +130,76 @@ void printargs(int argc, char **argv)
 		printf("%s\n", argv[x]);
 }
 
-int checkBuiltInCommands(Job *job, char **args, int argsc)
+int checkBuiltInCommands(Job *job, char **args, int argsc, int addToHistory)
 {
     if (strcmp(args[0], "alias") == 0) {
+        if (addToHistory) {
+            addHistory(job);
+        }
+        
         handleAlias(job->command);
         
         job = job->next;
         
         return 1;
     } else if (strcmp(args[0], "unalias") == 0) {
+        if (addToHistory) {
+            addHistory(job);
+        }
+        
         deleteAlias(args[1]);
         
         job = job->next;
         
         return 1;
     } else if (strcmp(args[0], "history") == 0) {
+        if (addToHistory) {
+            addHistory(job);
+        }
         
+        printHistory();
+        
+        return 1;
+    } else if (strcmp(args[0], "cd") == 0) {
+        
+        if (addToHistory) {
+            addHistory(job);
+        }
+        
+        // @todo Support ~
+        int result = chdir(args[1]);
+        
+        if (result == -1) {
+            printf("cd: %s: No such file or directory", args[1]);
+        }
+        
+        return 1;
+    } else if (args[0][0] == '!') {
+        
+        strsep(&args[0], "!"); // Once to remove the "!"
+        int num = atoi(strsep(&args[0], "!")); // Anothoer time to get the number
+        HistoryNode *his = getHistoryCommand(num - 1);
+        if (his != NULL) {
+            runJobs(his->job, 0);
+        }
+        
+        return 1;
+        
+    } else if (strcmp(args[0], "!!") == 0) {
+        
+        HistoryNode *his = getHistoryCommand(historySize - 1);
+        if (his != NULL) {
+            runJobs(his->job, 0);
+        }
+        
+        return 1;
     }
     
     return -1;
 }
 
 // Some code was used and modifed from http://stackoverflow.com/questions/1694706/problem-with-piping-commands-in-c
-int runJobs(Job * job)
+int runJobs(Job * job, int addToHistory)
 {
     int numcmds = 0;
     Job *tmp = NULL;
@@ -206,6 +258,7 @@ int runJobs(Job * job)
     
     int i = 0;
     while (job != NULL) {
+        
         if (strcmp(job->command, "exit") == 0) {
             for (p = 0; p < numcmds; p++)
             {
@@ -224,13 +277,17 @@ int runJobs(Job * job)
         // Parse command
         argsc = makeargs(job->command, &args);
         
-        if (checkBuiltInCommands(job, args, argsc) == 1) {
+        if (checkBuiltInCommands(job, args, argsc, addToHistory) == 1) {
             
             clean(argsc, args);
             
             job = job->next;
             
             continue;
+        }
+        
+        if (addToHistory == 1) {
+            addHistory(job);
         }
         
         // See if we can find an alias matching the command
@@ -338,29 +395,33 @@ Job * createJob(char *command, char *inFile, char *outFile, int redirectOut, int
     return job;
 }
 
+void freeJob(Job *job)
+{
+    free(job->command);
+    job->command = NULL;
+    
+    if (job->inFile != NULL) {
+        free(job->inFile);
+        job->inFile = NULL;    
+    }
+    
+    if (job->outFile != NULL) {
+        free(job->outFile);
+        job->outFile = NULL;    
+    }
+    
+    free(job);
+    job = NULL;
+
+}
+
 void cleanJobs(Job * job)
 {
     Job * tmp;
     while (job != NULL) {
-        free(job->command);
-        job->command = NULL;
-        
-        if (job->inFile != NULL) {
-            free(job->inFile);
-            job->inFile = NULL;    
-        }
-        
-        if (job->outFile != NULL) {
-            free(job->outFile);
-            job->outFile = NULL;    
-        }
-        
-        tmp = job;
-        job = job->next;
-        
-        tmp->prev = NULL;        
-        free(tmp);
-        tmp = NULL;
+        tmp = job->next;
+        freeJob(job);
+        job = tmp;
     }
 }
 
@@ -385,10 +446,11 @@ Job * getJobs(FILE * inputStream)
     while (1) {
         
     // Label so we can jump back to this switch statement after internal processing of more characters
+    // this prevents us from having to pull another character off the buffer
     switchChar:
         
         switch (c)
-        {
+        {                
             case ';':
                 
                 if (inQuote) {
@@ -561,19 +623,37 @@ Job * getJobs(FILE * inputStream)
     }
 }
 
+void readHistory()
+{
+    FILE *file = fopen(HISTFILE, "r");
+    
+    if (file == NULL) {
+        return;
+    }
+
+    Job *job = getJobs(file);    
+    while (job != NULL) {
+        addHistory(job);
+        
+        job = job->next;
+    }
+}
+
 void loadRc()
 {
-    FILE* fd = fopen("./.mshrc", "r");
+    FILE* file = fopen("./.mshrc", "r");
 
-    if (fd == NULL) {
+    if (file == NULL) {
         perror("opening file failed");
         
         return;
     }
     
-    Job *job = getJobs(fd);
+    Job *job = getJobs(file);
     
-    runJobs(job);
+    runJobs(job, 0);
+    cleanJobs(job);
+    fclose(file);
 }
 
 int main(int argc, const char * argv[])
@@ -582,19 +662,21 @@ int main(int argc, const char * argv[])
     
     loadRc();
     
-    Job * job = NULL;    
+    readHistory();
+    
+    Job * job = NULL;
     int run = 1;
     while (run == 1) {  
         
         printf("?:");
         job = getJobs(stdin);
         
-        run = runJobs(job);
+        run = runJobs(job, 1);
         
-        cleanJobs(job);
         job = NULL;
     }
     
+    cleanHistory();
     clearAliases();
     
     return 0;
