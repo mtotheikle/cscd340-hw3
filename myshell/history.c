@@ -3,7 +3,6 @@
 //  myshell
 //
 //  Created by Michael Williams on 10/15/12.
-//  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
 //
 
 #include <stdio.h>
@@ -53,7 +52,6 @@ void addHistory(Job *job)
 
 void freeHistoryNode(HistoryNode *node)
 {
-    printf("Freeing node\n");
     cleanJobs(node->job);
     node->next = NULL;
     node->job = NULL;
@@ -125,43 +123,30 @@ void cleanHistory()
     
     FILE * fd = fopen(HISTFILE, "wb");
     
-    int i = 1;
-    int maxFileLines = 0;//atoi(getenv("HISTFILESIZE"));
+    int maxFileLines = 100; // Default to 100
+    if (getenv("HISTFILESIZE")) {
+        maxFileLines = atoi(getenv("HISTFILESIZE"));
+    }
+    
     int numToSkip = 0;
     if (maxFileLines < historySize) {
         // We need to restrict what we write to the file
         numToSkip = historySize - maxFileLines;
     }
     
-    HistoryNode * tmp = historyHead;
-    while (tmp != NULL) {
-        tmp = tmp->next;
-        deleteHistoryNodeAt(0);
-    }
-    
-    /*
-    head = NULL;
-    
+    int i = 1;
     HistoryNode *toDelete = NULL;
-    HistoryNode *cur = historyHead;
-    Job * tmp;
-    while (cur != NULL) {
-        toDelete = cur->next;
-        freeJob(cur);
-        cur = toDelete;
-    }
-    
+    HistoryNode *cur = historyHead;    
     while (cur != NULL) {
         toDelete = cur;
         cur = cur->next; // advance to next node
-        
-        i++;
         if (i > numToSkip) {
             printJob(toDelete->job, fd); // print job to file
         }
+        i++;
                 
         deleteHistoryNodeAt(0);
-    }*/
+    }
     
     fclose(fd);
 }

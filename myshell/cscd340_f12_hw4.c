@@ -1,8 +1,11 @@
 //
 //  main.c
 //  Michael Williams
-//  HW 3
+//  HW 4
 //
+
+// IMPORTANT NOTE:
+// setenv causes memory leaks and is documented online
 
 // 
 // Note: Bash syntax for redirecting file descriptors to another does not work, for example: 2>&1
@@ -15,8 +18,11 @@
 // Note: There is little input validation so inputing something like alias la='ls -a 
 //       will cause it to break as getchar() is called and will not know there is no more input
 
-// OLD PATH: 
-// /Users/Mike/.rvm/gems/ruby-1.9.3-p0/bin:/Users/Mike/.rvm/gems/ruby-1.9.3-p0@global/bin:/Users/Mike/.rvm/rubies/ruby-1.9.3-p0/bin:/Users/Mike/.rvm/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin:/opt/local/bin:/usr/local/git/bin
+// IMPORTANT NOTE:
+// setenv causes memory leaks and is documented online
+// cd ~/ does not work either as it does not expand the ~ into home
+
+// Some of this code got a little messy and disorganized as time was limited this weekend
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -198,6 +204,8 @@ int checkBuiltInCommands(Job *job, char **args, int argsc, int addToHistory)
             runJobs(his->job, 0);
         }
         
+        cleanJobs(job);
+        
         return 1;
     } else if (args[0][0] == '!') {
         
@@ -208,13 +216,13 @@ int checkBuiltInCommands(Job *job, char **args, int argsc, int addToHistory)
             runJobs(his->job, 0);
         }
         
+        cleanJobs(job);
+        
         return 1;
         
     } else if (strstr(args[0], "PATH=") != NULL) {
         
-        return 1;
-        
-        char *tmp = malloc(sizeof(char *) * strlen(args[0]) - 4); // Enough room for \0
+        char *tmp = malloc(sizeof(char *) * strlen(args[0])); // Enough room for \0
         strncpy(tmp, args[0] + 5, strlen(args[0]));
         
         char *path = NULL;
@@ -232,17 +240,18 @@ int checkBuiltInCommands(Job *job, char **args, int argsc, int addToHistory)
         }
         
         setenv("PATH", path, 1);
+        
         free(path);
         free(tmp);
         path = NULL; // Don't use path later, invalid memory
         tmp = NULL;
         
+        cleanJobs(job);
+        
         return 1;
     } else if (strstr(args[0], "=") != NULL) {
         
-        return 1;
-        
-        char *tmp = malloc(sizeof(char *) * strlen(args[0]) + 1); // Enough room for \0
+        char *tmp = malloc(sizeof(char *) * strlen(args[0]) + 2); // Enough room for \0
         strcpy(tmp, args[0]);
         
         char *left = strtok(tmp, "=");
@@ -251,6 +260,8 @@ int checkBuiltInCommands(Job *job, char **args, int argsc, int addToHistory)
         setenv(left, value, 1);
         free(tmp);
         tmp = NULL;
+        
+        cleanJobs(job);
         
         return 1;
     }
@@ -330,6 +341,8 @@ int runJobs(Job * job, int addToHistory)
                     close(writing[p]);
                 }
             }
+
+            cleanJobs(job);
             
             return -1;
         }
@@ -348,7 +361,9 @@ int runJobs(Job * job, int addToHistory)
         
         if (addToHistory == 1) {
             addHistory(job);
+            addToHistory = 0;
         }
+        
         
         // See if we can find an alias matching the command
         Node *alias1 = findAliasNode(args[0]);
@@ -697,7 +712,6 @@ void readHistory()
 
 void loadRc()
 {
-    return;
     FILE* file = fopen("./.mshrc", "r");
 
     if (file == NULL) {
@@ -710,7 +724,6 @@ void loadRc()
     while (fgets(buf, MAX, file) != NULL) {        
         Job *job = parseCommand(buf);
         runJobs(job, 0);
-        cleanJobs(job);
     }
     
     fclose(file);

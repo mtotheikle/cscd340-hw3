@@ -1,7 +1,7 @@
 //
 //  declarations.h
 //  Michael Williams
-//  HW 3
+//  HW 4
 //
 
 // These are declarations used in the main program, not the linked list piece

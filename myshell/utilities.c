@@ -3,7 +3,6 @@
 //  myshell
 //
 //  Created by Michael Williams on 10/15/12.
-//  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
 //
 
 #include <stdio.h>
@@ -72,8 +71,10 @@ int makeargs(char *s, char *** argv)
 
 void freeJob(Job *job)
 {
-    free(job->command);
-    job->command = NULL;
+    if (job->command != NULL) {
+        free(job->command);
+        job->command = NULL;
+    }
     
     if (job->inFile != NULL) {
         free(job->inFile);
@@ -91,7 +92,6 @@ void freeJob(Job *job)
 
 void cleanJobs(Job * job)
 {
-    printf("Cleaning jobs");
     Job * tmp;
     while (job != NULL) {
         tmp = job->next;

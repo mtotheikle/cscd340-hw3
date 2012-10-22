@@ -3,7 +3,6 @@
 //  myshell
 //
 //  Created by Michael Williams on 10/15/12.
-//  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
 //
 
 #ifndef myshell_history_h

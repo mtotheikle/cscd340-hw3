@@ -2,4 +2,4 @@ alias la='ls -a';
 alias lal="ls -la"
 
 PATH=$PATH:./
-HISTFILESIZE=2
+HISTFILESIZE=20

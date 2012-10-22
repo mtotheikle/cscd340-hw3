@@ -1,7 +1,7 @@
 //
 //  linkedList.c
 //  Michael Williams
-//  HW 3
+//  HW 4
 //
 
 #include <stdio.h>

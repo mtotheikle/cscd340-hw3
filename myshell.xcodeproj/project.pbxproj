@@ -7,11 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		270819901629084F007E44DD /* cscd340_f12_hw3.c in Sources */ = {isa = PBXBuildFile; fileRef = 2708198F1629084F007E44DD /* cscd340_f12_hw3.c */; };
+		270819901629084F007E44DD /* cscd340_f12_hw4.c in Sources */ = {isa = PBXBuildFile; fileRef = 2708198F1629084F007E44DD /* cscd340_f12_hw4.c */; };
 		270819921629084F007E44DD /* myshell.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 270819911629084F007E44DD /* myshell.1 */; };
 		270819A6162A1393007E44DD /* linkedList.c in Sources */ = {isa = PBXBuildFile; fileRef = 270819A4162A1393007E44DD /* linkedList.c */; };
 		270819B0162B5A0A007E44DD /* makefile in Sources */ = {isa = PBXBuildFile; fileRef = 270819AF162B5A0A007E44DD /* makefile */; };
-		27730E12162D2ACB008C7449 /* parser.c in Sources */ = {isa = PBXBuildFile; fileRef = 27730E11162D2ACB008C7449 /* parser.c */; };
 		27730E14162D2B93008C7449 /* utilities.c in Sources */ = {isa = PBXBuildFile; fileRef = 27730E13162D2B93008C7449 /* utilities.c */; };
 		27730E18162D35C0008C7449 /* .mshrc in CopyFiles */ = {isa = PBXBuildFile; fileRef = 27730E16162D3588008C7449 /* .mshrc */; };
 		27730E1B162D3C3B008C7449 /* history.c in Sources */ = {isa = PBXBuildFile; fileRef = 27730E1A162D3C3B008C7449 /* history.c */; };
@@ -44,14 +43,12 @@
 
 /* Begin PBXFileReference section */
 		2708198B1629084F007E44DD /* myshell */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = myshell; sourceTree = BUILT_PRODUCTS_DIR; };
-		2708198F1629084F007E44DD /* cscd340_f12_hw3.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = cscd340_f12_hw3.c; sourceTree = "<group>"; };
+		2708198F1629084F007E44DD /* cscd340_f12_hw4.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = cscd340_f12_hw4.c; sourceTree = "<group>"; };
 		270819911629084F007E44DD /* myshell.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = myshell.1; sourceTree = "<group>"; };
 		270819A31629242E007E44DD /* declarations.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = declarations.h; sourceTree = "<group>"; };
 		270819A4162A1393007E44DD /* linkedList.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = linkedList.c; sourceTree = "<group>"; };
 		270819A5162A1393007E44DD /* linkedList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = linkedList.h; sourceTree = "<group>"; };
 		270819AF162B5A0A007E44DD /* makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
-		27730E0F162D2ABB008C7449 /* parser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = parser.h; sourceTree = "<group>"; };
-		27730E11162D2ACB008C7449 /* parser.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = parser.c; sourceTree = "<group>"; };
 		27730E13162D2B93008C7449 /* utilities.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = utilities.c; sourceTree = "<group>"; };
 		27730E15162D2B9F008C7449 /* utilities.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = utilities.h; sourceTree = "<group>"; };
 		27730E16162D3588008C7449 /* .mshrc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .mshrc; sourceTree = "<group>"; };
@@ -94,12 +91,10 @@
 				27730E16162D3588008C7449 /* .mshrc */,
 				270819A4162A1393007E44DD /* linkedList.c */,
 				270819A5162A1393007E44DD /* linkedList.h */,
-				2708198F1629084F007E44DD /* cscd340_f12_hw3.c */,
+				2708198F1629084F007E44DD /* cscd340_f12_hw4.c */,
 				270819911629084F007E44DD /* myshell.1 */,
 				270819A31629242E007E44DD /* declarations.h */,
 				270819AF162B5A0A007E44DD /* makefile */,
-				27730E0F162D2ABB008C7449 /* parser.h */,
-				27730E11162D2ACB008C7449 /* parser.c */,
 				27730E13162D2B93008C7449 /* utilities.c */,
 				27730E15162D2B9F008C7449 /* utilities.h */,
 				27730E19162D3C31008C7449 /* history.h */,
@@ -159,10 +154,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				270819901629084F007E44DD /* cscd340_f12_hw3.c in Sources */,
+				270819901629084F007E44DD /* cscd340_f12_hw4.c in Sources */,
 				270819A6162A1393007E44DD /* linkedList.c in Sources */,
 				270819B0162B5A0A007E44DD /* makefile in Sources */,
-				27730E12162D2ACB008C7449 /* parser.c in Sources */,
 				27730E14162D2B93008C7449 /* utilities.c in Sources */,
 				27730E1B162D3C3B008C7449 /* history.c in Sources */,
 			);
