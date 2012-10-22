@@ -191,6 +191,14 @@ int checkBuiltInCommands(Job *job, char **args, int argsc, int addToHistory)
         }
         
         return 1;
+    }  else if (strcmp(args[0], "!!") == 0) {
+        
+        HistoryNode *his = getHistoryCommand(historySize - 1);
+        if (his != NULL) {
+            runJobs(his->job, 0);
+        }
+        
+        return 1;
     } else if (args[0][0] == '!') {
         
         strsep(&args[0], "!"); // Once to remove the "!"
@@ -202,17 +210,9 @@ int checkBuiltInCommands(Job *job, char **args, int argsc, int addToHistory)
         
         return 1;
         
-    } else if (strcmp(args[0], "!!") == 0) {
-        
-        HistoryNode *his = getHistoryCommand(historySize - 1);
-        if (his != NULL) {
-            runJobs(his->job, 0);
-        }
-        
-        return 1;
     } else if (strstr(args[0], "PATH=") != NULL) {
         
-        char *tmp = malloc(sizeof(char *) * strlen(args[0] - 4)); // Enough room for \0
+        char *tmp = malloc(sizeof(char *) * strlen(args[0]) - 4); // Enough room for \0
         strncpy(tmp, args[0] + 5, strlen(args[0]));
         
         char *path = NULL;
@@ -232,6 +232,19 @@ int checkBuiltInCommands(Job *job, char **args, int argsc, int addToHistory)
         setenv("PATH", path, 1);
         free(path);
         path = NULL; // Don't use path later, invalid memory
+        
+        return 1;
+    } else if (strstr(args[0], "=") != NULL) {
+        
+        char *tmp = malloc(sizeof(char *) * strlen(args[0]) + 1); // Enough room for \0
+        strcpy(tmp, args[0]);
+        
+        char *left = strtok(tmp, "=");
+        char *value = strtok(NULL, "=");
+        
+        setenv(left, value, 1);
+        free(tmp);
+        tmp = NULL;
         
         return 1;
     }

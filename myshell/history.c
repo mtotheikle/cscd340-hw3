@@ -60,6 +60,33 @@ void freeHistoryNode(HistoryNode *node)
     node = NULL;
 }
 
+void deleteHistoryNodeAt(int i)
+{
+    if (i == 0) {
+        // Removing head
+        HistoryNode *tmp = historyHead;
+        historyHead = historyHead->next;
+        
+        tmp->next = NULL;
+        freeHistoryNode(tmp);
+    } else {
+        int j = 0;
+        HistoryNode *node = historyHead;
+        HistoryNode *prev = NULL;
+        while (j < i) {
+            prev = node;
+            node = node->next;
+            j++;
+        }
+        
+        prev->next = node->next;
+        node->next = NULL;
+        freeHistoryNode(node);
+    }
+    
+    historySize--;
+}
+
 void printJob(Job * job, FILE * fd)
 {
     Job *tmp = job;
@@ -94,11 +121,26 @@ void cleanHistory()
     HistoryNode *tmp;
     HistoryNode *cur = historyHead;
     FILE * fd = fopen(HISTFILE, "wb");
+    
+    int i = 1;
+    int maxFileLines = atoi(getenv("HISTFILESIZE"));
+    int numToSkip = 0;
+    if (maxFileLines < historySize) {
+        // We need to restrict what we write to the file
+        numToSkip = historySize - maxFileLines;
+    }
+    
     while (cur != NULL) {
-        printJob(cur->job, fd);
         tmp = cur;
         cur = cur->next;
-        freeHistoryNode(tmp);
+        
+        if (i <= numToSkip) {
+            i++;
+        } else {
+            printJob(tmp->job, fd);
+        }
+                
+        deleteHistoryNodeAt(0);
     }
     
     fclose(fd);
@@ -109,8 +151,7 @@ void printHistory()
     HistoryNode *tmp = historyHead;
     int i = 1;
     
-    while (tmp != NULL) {
-        
+    while (tmp != NULL) {        
         printf("\t %d ", i++);
         printJob(tmp->job, stdout);
         
