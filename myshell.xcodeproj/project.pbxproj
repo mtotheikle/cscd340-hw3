@@ -55,6 +55,7 @@
 		27730E19162D3C31008C7449 /* history.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = history.h; sourceTree = "<group>"; };
 		27730E1A162D3C3B008C7449 /* history.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = history.c; sourceTree = "<group>"; };
 		27730E3816312FC6008C7449 /* .msh_history */ = {isa = PBXFileReference; lastKnownFileType = text; path = .msh_history; sourceTree = "<group>"; };
+		2783F2BA16350D9A000169A7 /* cscd340_f12_hw4output.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = cscd340_f12_hw4output.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -99,6 +100,7 @@
 				27730E15162D2B9F008C7449 /* utilities.h */,
 				27730E19162D3C31008C7449 /* history.h */,
 				27730E1A162D3C3B008C7449 /* history.c */,
+				2783F2BA16350D9A000169A7 /* cscd340_f12_hw4output.txt */,
 			);
 			path = myshell;
 			sourceTree = "<group>";

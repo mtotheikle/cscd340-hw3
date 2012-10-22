@@ -156,44 +156,50 @@ void addToBuffer(char **content, char *buf) {
 int checkBuiltInCommands(Job *job, char **args, int argsc, int addToHistory)
 {
     if (strcmp(args[0], "alias") == 0) {
-        if (addToHistory) {
-            addHistory(job);
-        }
         
         handleAlias(job->command);
         
-        job = job->next;
+        if (addToHistory) {
+            addHistory(job);
+        } else {
+            cleanJobs(job);
+        }
         
         return 1;
     } else if (strcmp(args[0], "unalias") == 0) {
-        if (addToHistory) {
-            addHistory(job);
-        }
-        
         deleteAlias(args[1]);
         
-        job = job->next;
+        if (addToHistory) {
+            addHistory(job);
+        } else {
+            cleanJobs(job);
+        }
         
         return 1;
     } else if (strcmp(args[0], "history") == 0) {
-        if (addToHistory) {
-            addHistory(job);
-        }
         
         printHistory();
         
-        return 1;
-    } else if (strcmp(args[0], "cd") == 0) {
-        
         if (addToHistory) {
             addHistory(job);
+        } else {
+            cleanJobs(job);
         }
+        
+        return 1;
+    } else if (strcmp(args[0], "cd") == 0) {
         
         // @todo Support ~
         int result = chdir(args[1]);
         
         if (result == -1) {
             printf("cd: %s: No such file or directory", args[1]);
+        }
+        
+        if (addToHistory) {
+            addHistory(job);
+        } else {
+            cleanJobs(job);
         }
         
         return 1;

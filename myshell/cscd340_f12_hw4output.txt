@@ -1,0 +1,71 @@
+./msh 
+
+?:ls -la
+total 216
+drwxr-xr-x  17 Mike  staff    578 Oct 21 22:12 .
+drwxr-xr-x   9 Mike  staff    306 Oct 18 10:08 ..
+-rw-r--r--@  1 Mike  staff     91 Oct 21 22:10 .msh_history
+-rw-r--r--@  1 Mike  staff     68 Oct 21 22:03 .mshrc
+-rw-r--r--@  1 Mike  staff  21470 Oct 21 22:10 cscd340_f12_hw4.c
+-rw-r--r--@  1 Mike  staff    490 Oct 21 21:58 declarations.h
+-rw-r--r--@  1 Mike  staff   3541 Oct 21 21:58 history.c
+-rw-r--r--@  1 Mike  staff    405 Oct 21 21:58 history.h
+-rw-r--r--@  1 Mike  staff   3349 Oct 21 21:58 linkedList.c
+-rw-r--r--@  1 Mike  staff    520 Oct 21 21:58 linkedList.h
+-rw-r--r--@  1 Mike  staff    111 Oct 21 21:59 makefile
+-rwxr-xr-x   1 Mike  staff  28896 Oct 21 22:12 msh
+-rw-r--r--@  1 Mike  staff   3121 Oct 12 19:24 myshell.1
+-rw-r--r--@  1 Mike  staff    913 Oct 15 23:03 parser.c
+-rw-r--r--@  1 Mike  staff    203 Oct 15 22:40 parser.h
+-rw-r--r--@  1 Mike  staff   2013 Oct 21 22:06 utilities.c
+-rw-r--r--@  1 Mike  staff    366 Oct 21 19:43 utilities.h
+?:e
+problem with command: No such file or directory
+?:msh   	
+
+
+
+
+
+
+?:exit
+?:ls -la
+total 216
+drwxr-xr-x  17 Mike  staff    578 Oct 21 22:12 .
+drwxr-xr-x   9 Mike  staff    306 Oct 18 10:08 ..
+-rw-r--r--@  1 Mike  staff     91 Oct 21 22:13 .msh_history
+-rw-r--r--@  1 Mike  staff     68 Oct 21 22:03 .mshrc
+-rw-r--r--@  1 Mike  staff  21470 Oct 21 22:10 cscd340_f12_hw4.c
+-rw-r--r--@  1 Mike  staff    490 Oct 21 21:58 declarations.h
+-rw-r--r--@  1 Mike  staff   3541 Oct 21 21:58 history.c
+-rw-r--r--@  1 Mike  staff    405 Oct 21 21:58 history.h
+-rw-r--r--@  1 Mike  staff   3349 Oct 21 21:58 linkedList.c
+-rw-r--r--@  1 Mike  staff    520 Oct 21 21:58 linkedList.h
+-rw-r--r--@  1 Mike  staff    111 Oct 21 21:59 makefile
+-rwxr-xr-x   1 Mike  staff  28896 Oct 21 22:12 msh
+-rw-r--r--@  1 Mike  staff   3121 Oct 12 19:24 myshell.1
+-rw-r--r--@  1 Mike  staff    913 Oct 15 23:03 parser.c
+-rw-r--r--@  1 Mike  staff    203 Oct 15 22:40 parser.h
+-rw-r--r--@  1 Mike  staff   2013 Oct 21 22:06 utilities.c
+-rw-r--r--@  1 Mike  staff    366 Oct 21 19:43 utilities.h
+?:history
+	 1 ls -la
+	 2 ls -lal
+	 3 history
+	 4 ls -la
+	 5 ls -la
+	 6 ls -l
+	 7 ls -la
+	 8 ls -la
+	 9 ls -la
+	 10 ls -la
+	 11 ls -la
+	 12 lal
+	 13 alias
+	 14 la
+	 15 ls -la
+	 16 e
+	 17 msh
+	 18 ls -la
+	 19 history
+?:exit
