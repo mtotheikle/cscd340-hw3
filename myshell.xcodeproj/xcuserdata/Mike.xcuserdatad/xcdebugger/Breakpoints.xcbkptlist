@@ -162,11 +162,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "myshell/cscd340_f12_hw3.c"
-         timestampString = "372552489.647386"
+         timestampString = "372567900.338905"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "342"
-         endingLineNumber = "342"
+         startingLineNumber = "348"
+         endingLineNumber = "348"
          landmarkName = "runJobs()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -175,11 +175,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "myshell/cscd340_f12_hw3.c"
-         timestampString = "372565014.021354"
+         timestampString = "372567900.338905"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "745"
-         endingLineNumber = "745"
+         startingLineNumber = "721"
+         endingLineNumber = "721"
          landmarkName = "main()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -188,11 +188,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "myshell/cscd340_f12_hw3.c"
-         timestampString = "372552489.647386"
+         timestampString = "372567900.338905"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "316"
-         endingLineNumber = "316"
+         startingLineNumber = "322"
+         endingLineNumber = "322"
          landmarkName = "runJobs()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -201,11 +201,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "myshell/cscd340_f12_hw3.c"
-         timestampString = "372565087.661244"
+         timestampString = "372567900.338905"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "771"
-         endingLineNumber = "771"
+         startingLineNumber = "746"
+         endingLineNumber = "746"
          landmarkName = "main()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -214,11 +214,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "myshell/history.c"
-         timestampString = "372542978.448771"
+         timestampString = "372566168.511321"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "39"
-         endingLineNumber = "39"
+         startingLineNumber = "40"
+         endingLineNumber = "40"
          landmarkName = "addHistory()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -227,11 +227,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "myshell/cscd340_f12_hw3.c"
-         timestampString = "372565087.661244"
+         timestampString = "372567900.338905"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "768"
-         endingLineNumber = "768"
+         startingLineNumber = "744"
+         endingLineNumber = "744"
          landmarkName = "main()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -266,24 +266,24 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "myshell/cscd340_f12_hw3.c"
-         timestampString = "372565087.661244"
+         timestampString = "372567900.338905"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "776"
-         endingLineNumber = "776"
+         startingLineNumber = "751"
+         endingLineNumber = "751"
          landmarkName = "main()"
          landmarkType = "7">
       </FileBreakpoint>
       <FileBreakpoint
-         shouldBeEnabled = "Yes"
+         shouldBeEnabled = "No"
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "myshell/cscd340_f12_hw3.c"
-         timestampString = "372565014.021354"
+         timestampString = "372567900.338905"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "756"
-         endingLineNumber = "756"
+         startingLineNumber = "732"
+         endingLineNumber = "732"
          landmarkName = "main()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -292,11 +292,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "myshell/history.c"
-         timestampString = "372564168.50281"
+         timestampString = "372567974.391063"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "151"
-         endingLineNumber = "151"
+         startingLineNumber = "171"
+         endingLineNumber = "171"
          landmarkName = "printHistory()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -305,11 +305,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "myshell/cscd340_f12_hw3.c"
-         timestampString = "372565014.021354"
+         timestampString = "372567900.338905"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "719"
-         endingLineNumber = "719"
+         startingLineNumber = "694"
+         endingLineNumber = "694"
          landmarkName = "readHistory()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -318,11 +318,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "myshell/history.c"
-         timestampString = "372542978.448771"
+         timestampString = "372566168.511321"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "38"
-         endingLineNumber = "38"
+         startingLineNumber = "39"
+         endingLineNumber = "39"
          landmarkName = "addHistory()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -331,11 +331,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "myshell/cscd340_f12_hw3.c"
-         timestampString = "372552489.647386"
+         timestampString = "372567900.338905"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "423"
-         endingLineNumber = "423"
+         startingLineNumber = "429"
+         endingLineNumber = "429"
          landmarkName = "createJob()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -344,11 +344,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "myshell/cscd340_f12_hw3.c"
-         timestampString = "372565014.021354"
+         timestampString = "372567900.338905"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "735"
-         endingLineNumber = "735"
+         startingLineNumber = "711"
+         endingLineNumber = "711"
          landmarkName = "loadRc()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -357,11 +357,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "myshell/cscd340_f12_hw3.c"
-         timestampString = "372565014.021354"
+         timestampString = "372567900.338905"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "738"
-         endingLineNumber = "738"
+         startingLineNumber = "714"
+         endingLineNumber = "714"
          landmarkName = "loadRc()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -383,25 +383,38 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "myshell/cscd340_f12_hw3.c"
-         timestampString = "372552296.865465"
+         timestampString = "372567900.338905"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "237"
-         endingLineNumber = "237"
+         startingLineNumber = "241"
+         endingLineNumber = "241"
          landmarkName = "checkBuiltInCommands()"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         filePath = "myshell/cscd340_f12_hw3.c"
+         timestampString = "372567900.338905"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "340"
+         endingLineNumber = "340"
+         landmarkName = "runJobs()"
          landmarkType = "7">
       </FileBreakpoint>
       <FileBreakpoint
          shouldBeEnabled = "Yes"
          ignoreCount = "0"
          continueAfterRunningActions = "No"
-         filePath = "myshell/cscd340_f12_hw3.c"
-         timestampString = "372564229.675827"
+         filePath = "myshell/history.c"
+         timestampString = "372567974.391063"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "334"
-         endingLineNumber = "334"
-         landmarkName = "runJobs()"
+         startingLineNumber = "154"
+         endingLineNumber = "154"
+         landmarkName = "cleanHistory()"
          landmarkType = "7">
       </FileBreakpoint>
    </FileBreakpoints>

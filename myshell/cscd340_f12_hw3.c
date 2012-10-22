@@ -212,6 +212,8 @@ int checkBuiltInCommands(Job *job, char **args, int argsc, int addToHistory)
         
     } else if (strstr(args[0], "PATH=") != NULL) {
         
+        return 1;
+        
         char *tmp = malloc(sizeof(char *) * strlen(args[0]) - 4); // Enough room for \0
         strncpy(tmp, args[0] + 5, strlen(args[0]));
         
@@ -231,10 +233,14 @@ int checkBuiltInCommands(Job *job, char **args, int argsc, int addToHistory)
         
         setenv("PATH", path, 1);
         free(path);
+        free(tmp);
         path = NULL; // Don't use path later, invalid memory
+        tmp = NULL;
         
         return 1;
     } else if (strstr(args[0], "=") != NULL) {
+        
+        return 1;
         
         char *tmp = malloc(sizeof(char *) * strlen(args[0]) + 1); // Enough room for \0
         strcpy(tmp, args[0]);
@@ -430,53 +436,23 @@ Job * createJob(char *command, char *inFile, char *outFile, int redirectOut, int
     
     job->command = NULL;
     if (command != NULL) {
-        job->command = malloc(sizeof(char *) * strlen(command));
+        job->command = malloc(sizeof(char *) * (strlen(command) + 1));
         strcpy(job->command, command);
     }
     
     job->inFile = NULL;
     if (inFile != NULL) {
-        job->inFile = malloc(sizeof(char *) * strlen(inFile));
+        job->inFile = malloc(sizeof(char *) * (strlen(inFile) + 1));
         strcpy(job->inFile, inFile);
     }
     
     job->outFile = NULL;
     if (outFile != NULL) {
-        job->outFile = malloc(sizeof(char *) * strlen(outFile));
+        job->outFile = malloc(sizeof(char *) * (strlen(outFile) + 1));
         strcpy(job->outFile, outFile);
     }
     
     return job;
-}
-
-void freeJob(Job *job)
-{
-    free(job->command);
-    job->command = NULL;
-    
-    if (job->inFile != NULL) {
-        free(job->inFile);
-        job->inFile = NULL;    
-    }
-    
-    if (job->outFile != NULL) {
-        free(job->outFile);
-        job->outFile = NULL;    
-    }
-    
-    free(job);
-    job = NULL;
-
-}
-
-void cleanJobs(Job * job)
-{
-    Job * tmp;
-    while (job != NULL) {
-        tmp = job->next;
-        freeJob(job);
-        job = tmp;
-    }
 }
 
 Job * parseCommand(char *command)
@@ -487,7 +463,6 @@ Job * parseCommand(char *command)
     char buf[MAX] = {};
     char inFilenameBuf[MAX] = {}; // This is the filename for input redirection
     char outFilenameBuf[MAX] = {}; // This is the filename for output redirection
-    
     
     int inQuote = 0;
     char quoteChar;
@@ -722,6 +697,7 @@ void readHistory()
 
 void loadRc()
 {
+    return;
     FILE* file = fopen("./.mshrc", "r");
 
     if (file == NULL) {
@@ -767,7 +743,6 @@ int main(int argc, const char * argv[])
         jobs = parseCommand(buf);
         run = runJobs(jobs, 1);
         clearBuffer(buf);
-        
         jobs = NULL;
     }
     

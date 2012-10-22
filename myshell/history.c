@@ -17,6 +17,7 @@
 #include "stdlib.h"
 #include "declarations.h"
 #include "history.h"
+#include "utilities.h"
 
 HistoryNode * createHistoryNode(Job *job)
 {
@@ -28,7 +29,7 @@ HistoryNode * createHistoryNode(Job *job)
 }
 
 void addHistory(Job *job)
-{
+{    
     if (job->command == NULL) {
         return;
     }
@@ -52,10 +53,10 @@ void addHistory(Job *job)
 
 void freeHistoryNode(HistoryNode *node)
 {
-    return;
-    
-    // @todo Free job
-    //freeJob(node->job);
+    printf("Freeing node\n");
+    cleanJobs(node->job);
+    node->next = NULL;
+    node->job = NULL;
     free(node);
     node = NULL;
 }
@@ -118,30 +119,49 @@ void printJob(Job * job, FILE * fd)
 
 void cleanHistory()
 {
-    HistoryNode *tmp;
-    HistoryNode *cur = historyHead;
+    if (historySize == 0) {
+        return;
+    }
+    
     FILE * fd = fopen(HISTFILE, "wb");
     
     int i = 1;
-    int maxFileLines = atoi(getenv("HISTFILESIZE"));
+    int maxFileLines = 0;//atoi(getenv("HISTFILESIZE"));
     int numToSkip = 0;
     if (maxFileLines < historySize) {
         // We need to restrict what we write to the file
         numToSkip = historySize - maxFileLines;
     }
     
+    HistoryNode * tmp = historyHead;
+    while (tmp != NULL) {
+        tmp = tmp->next;
+        deleteHistoryNodeAt(0);
+    }
+    
+    /*
+    head = NULL;
+    
+    HistoryNode *toDelete = NULL;
+    HistoryNode *cur = historyHead;
+    Job * tmp;
     while (cur != NULL) {
-        tmp = cur;
-        cur = cur->next;
+        toDelete = cur->next;
+        freeJob(cur);
+        cur = toDelete;
+    }
+    
+    while (cur != NULL) {
+        toDelete = cur;
+        cur = cur->next; // advance to next node
         
-        if (i <= numToSkip) {
-            i++;
-        } else {
-            printJob(tmp->job, fd);
+        i++;
+        if (i > numToSkip) {
+            printJob(toDelete->job, fd); // print job to file
         }
                 
         deleteHistoryNodeAt(0);
-    }
+    }*/
     
     fclose(fd);
 }

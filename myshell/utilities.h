@@ -17,4 +17,6 @@ int makeargs(char *s, char *** argv);
 
 void clearBuffer(char *buf);
 
+void cleanJobs(Job * job);
+
 #endif

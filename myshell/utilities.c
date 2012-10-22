@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "declarations.h"
+#include "linkedList.h"
 
 void strip(char * s)
 {
@@ -67,6 +69,36 @@ int makeargs(char *s, char *** argv)
     return count;
     
 }// end makeArgs
+
+void freeJob(Job *job)
+{
+    free(job->command);
+    job->command = NULL;
+    
+    if (job->inFile != NULL) {
+        free(job->inFile);
+        job->inFile = NULL;    
+    }
+    
+    if (job->outFile != NULL) {
+        free(job->outFile);
+        job->outFile = NULL;    
+    }
+    
+    free(job);
+    job = NULL;
+}
+
+void cleanJobs(Job * job)
+{
+    printf("Cleaning jobs");
+    Job * tmp;
+    while (job != NULL) {
+        tmp = job->next;
+        freeJob(job);
+        job = tmp;
+    }
+}
 
 void clearBuffer(char *buf)
 {
